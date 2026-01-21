@@ -1,0 +1,19 @@
+{
+  "name": "thresho-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Multi-platform Threshold Wallet with Stellar integration",
+  "workspaces": [
+    "backend",
+    "core",
+    "web",
+    "desktop",
+    "mobile"
+  ],
+  "scripts": {
+    "install-all": "npm install",
+    "dev-backend": "npm run dev --workspace=backend",
+    "dev-web": "npm run dev --workspace=web",
+    "build-web": "npm run build --workspace=web"
+  }
+}
