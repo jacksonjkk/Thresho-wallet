@@ -5,23 +5,23 @@ import { Account } from './Account';
 @Entity('signers')
 export class Signer {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
-  @ManyToOne(() => Account, (account) => account.signers)
-  account: Account;
+  @ManyToOne(() => Account, (account) => account.signers, { onDelete: 'CASCADE' })
+  account!: Account;
 
-  @ManyToOne(() => User, (user) => user.signerAccounts)
-  user: User;
-
-  @Column()
-  name: string;
+  @ManyToOne(() => User, (user) => user.signerAccounts, { onDelete: 'CASCADE', nullable: true })
+  user?: User;
 
   @Column()
-  publicKey: string;
+  name!: string;
+
+  @Column()
+  publicKey!: string;
 
   @Column({ type: 'int' })
-  weight: number;
+  weight!: number;
 
   @Column()
-  role: string; // 'owner', 'signer', 'viewer'
+  role!: string; // 'owner', 'signer', 'viewer'
 }

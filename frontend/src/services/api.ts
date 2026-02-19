@@ -11,15 +11,10 @@ class ApiClient {
 
   setToken(token: string | null) {
     this.token = token;
-    if (token) {
-      localStorage.setItem('authToken', token);
-    } else {
-      localStorage.removeItem('authToken');
-    }
   }
 
   getToken() {
-    return this.token || localStorage.getItem('authToken');
+    return this.token;
   }
 
   private getHeaders() {
@@ -43,6 +38,7 @@ class ApiClient {
     
     const response = await fetch(url, {
       ...options,
+      credentials: 'include',
       headers: {
         ...this.getHeaders(),
         ...options.headers,
@@ -61,14 +57,14 @@ class ApiClient {
     return this.request<T>(endpoint, { method: 'GET' });
   }
 
-  async post<T>(endpoint: string, body?: any): Promise<T> {
+  async post<T>(endpoint: string, body?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: JSON.stringify(body),
     });
   }
 
-  async put<T>(endpoint: string, body?: any): Promise<T> {
+  async put<T>(endpoint: string, body?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: JSON.stringify(body),

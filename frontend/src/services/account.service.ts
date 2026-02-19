@@ -32,6 +32,18 @@ export interface CreateAccountRequest {
   }[];
 }
 
+export interface AddSignerRequest {
+  name: string;
+  publicKey: string;
+  weight: number;
+}
+
+export interface WalletInfo {
+  publicKey: string;
+  balances: Array<{ asset_type: string; balance: string; asset_code?: string }>;
+  networkPassphrase?: string;
+}
+
 export const accountService = {
   async createAccount(data: CreateAccountRequest): Promise<{ accountId: string }> {
     return apiClient.post<{ accountId: string }>('/accounts', data);
@@ -53,5 +65,20 @@ export const accountService = {
 
   async getMembers(accountId: string): Promise<Signer[]> {
     return apiClient.get<Signer[]>(`/accounts/${accountId}/members`);
+  },
+
+  async getAccountWalletInfo(accountId: string): Promise<WalletInfo> {
+    return apiClient.get<WalletInfo>(`/accounts/${accountId}/wallet-info`);
+  },
+
+  async addSigner(accountId: string, data: AddSignerRequest): Promise<Signer> {
+    return apiClient.post<Signer>(`/accounts/${accountId}/signers`, data);
+  },
+
+  async removeSigner(accountId: string, signerId: string): Promise<{ success: boolean }> {
+    return apiClient.delete<{ success: boolean }>(`/accounts/${accountId}/signers/${signerId}`);
+  },
+  async syncMultisig(accountId: string): Promise<{ transactionId: string; xdr: string; networkPassphrase: string }> {
+    return apiClient.post<{ transactionId: string; xdr: string; networkPassphrase: string }>(`/accounts/${accountId}/sync-multisig`);
   },
 };

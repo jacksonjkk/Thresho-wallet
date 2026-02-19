@@ -13,10 +13,31 @@ import {
 } from '@stellar/stellar-sdk';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { z } from 'zod';
 import { AppDataSource } from '../config/database';
 import { User } from '../models/User';
+import { validateBody } from '../utils/validation';
 
 export class AuthController {
+  async deleteAccount(req: Request, res: Response) {
+    try {
+      const userId = req.userId;
+      const user = await this.userRepo.findOne({ where: { id: userId } });
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      await this.userRepo.remove(user);
+      res.clearCookie('authToken', {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      });
+      return res.json({ message: 'Account deleted successfully' });
+    } catch (err) {
+      console.error('Failed to delete account:', err);
+      return res.status(500).json({ error: 'Failed to delete account' });
+    }
+  }
   private userRepo = AppDataSource.getRepository(User);
   private static challenges = new Map<string, { nonce: string; expiresAt: number }>();
   private static serverKeypair: Keypair | null = null;
@@ -27,8 +48,12 @@ export class AuthController {
     }
 
     if (StrKey.isValidMed25519PublicKey(publicKey)) {
-      const decoded = StrKey.decodeMed25519PublicKey(publicKey) as any;
-      const raw = Buffer.isBuffer(decoded) ? decoded : decoded?.publicKey;
+      const decoded: unknown = StrKey.decodeMed25519PublicKey(publicKey);
+      const raw = Buffer.isBuffer(decoded)
+        ? decoded
+        : typeof decoded === 'object' && decoded !== null && 'publicKey' in decoded
+          ? (decoded as { publicKey: Buffer }).publicKey
+          : null;
       if (!raw) {
         throw new Error('Invalid public key');
       }
@@ -86,20 +111,24 @@ export class AuthController {
 
   async checkEmailExists(req: Request, res: Response) {
     try {
-      const { email } = req.body;
-
-      if (!email) {
-        return res.status(400).json({ error: 'Email required' });
-      }
+      const { email } = validateBody(
+        z.object({ email: z.string().email() }),
+        req.body
+      );
 
       const existingUser = await this.userRepo.findOne({ where: { email } });
       if (existingUser) {
         console.log('Email already registered:', email);
-        return res.status(200).json({ exists: true, message: 'Email already exists' });
       }
 
-      return res.status(200).json({ exists: false });
+      return res.status(200).json({
+        exists: false,
+        message: 'If the email is registered, you can log in or reset your password.',
+      });
     } catch (err) {
+      if (err instanceof Error && err.message) {
+        return res.status(400).json({ error: err.message });
+      }
       console.error('❌ Email check error:', err);
       return res.status(500).json({ error: 'Email check failed' });
     }
@@ -107,14 +136,17 @@ export class AuthController {
 
   async register(req: Request, res: Response) {
     try {
-      const { firstName, lastName, email, password } = req.body;
+      const { firstName, lastName, email, password } = validateBody(
+        z.object({
+          firstName: z.string().min(1),
+          lastName: z.string().min(1),
+          email: z.string().email(),
+          password: z.string().min(8),
+        }),
+        req.body
+      );
 
       console.log('Register attempt:', email);
-
-      if (!firstName || !lastName || !email || !password) {
-        console.log('Missing required fields');
-        return res.status(400).json({ error: 'First name, last name, email, and password required' });
-      }
 
       const existingUser = await this.userRepo.findOne({ where: { email } });
       if (existingUser) {
@@ -124,7 +156,7 @@ export class AuthController {
 
       console.log('Hashing password...');
       const passwordHash = await bcrypt.hash(password, 10);
-      
+
       console.log('Generating Stellar keypair...');
       const keypair = Keypair.random();
       const { encrypted, iv } = AuthController.encryptSecret(keypair.secret());
@@ -139,23 +171,23 @@ export class AuthController {
       }
 
       console.log('Creating user object...');
-      const user = this.userRepo.create({ 
-        firstName, 
-        lastName, 
-        email, 
+      const user = this.userRepo.create({
+        firstName,
+        lastName,
+        email,
         passwordHash,
         hasCompletedOnboarding: false,
         stellarPublicKey: keypair.publicKey(),
         stellarSecretEncrypted: encrypted,
         stellarSecretIv: iv
       });
-      
+
       console.log('Saving user to database...');
       const savedUser = await this.userRepo.save(user);
 
       console.log('✅ User registered:', savedUser.id, savedUser.email, `(${savedUser.firstName} ${savedUser.lastName})`);
 
-      return res.status(201).json({ 
+      return res.status(201).json({
         message: 'User registered successfully',
         user: {
           id: savedUser.id,
@@ -168,17 +200,22 @@ export class AuthController {
       });
     } catch (err) {
       console.error('❌ Registration error:', err);
-      return res.status(500).json({ error: 'Registration failed', details: err instanceof Error ? err.message : 'Unknown error' });
+      if (err instanceof Error && err.message) {
+        return res.status(400).json({ error: err.message });
+      }
+      return res.status(500).json({ error: 'Registration failed' });
     }
   }
 
   async login(req: Request, res: Response) {
     try {
-      const { email, password } = req.body;
-
-      if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password required' });
-      }
+      const { email, password } = validateBody(
+        z.object({
+          email: z.string().email(),
+          password: z.string().min(1),
+        }),
+        req.body
+      );
 
       const user = await this.userRepo.findOne({ where: { email } });
       if (!user) {
@@ -190,9 +227,21 @@ export class AuthController {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
-      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
-      return res.json({ 
-        token, 
+      const secret = process.env.JWT_SECRET;
+      if (!secret) {
+        console.error('CRITICAL: JWT_SECRET is not defined');
+        return res.status(500).json({ error: 'Server configuration error' });
+      }
+
+      const token = jwt.sign({ userId: user.id }, secret, { expiresIn: '7d' });
+      res.cookie('authToken', token, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+      return res.json({
+        token,
         user: {
           id: user.id,
           firstName: user.firstName,
@@ -205,6 +254,9 @@ export class AuthController {
       });
     } catch (err) {
       console.error(err);
+      if (err instanceof Error && err.message) {
+        return res.status(400).json({ error: err.message });
+      }
       return res.status(500).json({ error: 'Login failed' });
     }
   }
@@ -325,7 +377,7 @@ export class AuthController {
       const clientKeypair = Keypair.fromPublicKey(normalizedPublicKey);
       const hash = tx.hash();
 
-      const getSignatureBytes = (sig: any): Buffer =>
+      const getSignatureBytes = (sig: { signature: Buffer | (() => Buffer) }): Buffer =>
         typeof sig.signature === 'function' ? sig.signature() : sig.signature;
 
       const hasClientSignature = tx.signatures.some((sig) =>
@@ -350,7 +402,7 @@ export class AuthController {
 
   async getProfile(req: Request, res: Response) {
     try {
-      const userId = (req as any).userId;
+      const userId = req.userId;
       const user = await this.userRepo.findOne({ where: { id: userId } });
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
@@ -373,7 +425,7 @@ export class AuthController {
 
   async updateProfile(req: Request, res: Response) {
     try {
-      const userId = (req as any).userId;
+      const userId = req.userId;
       const { firstName, lastName, avatarUrl } = req.body;
 
       const user = await this.userRepo.findOne({ where: { id: userId } });
@@ -389,6 +441,9 @@ export class AuthController {
       }
       if (typeof avatarUrl === 'string' || avatarUrl === null) {
         user.avatarUrl = avatarUrl;
+      }
+      if (typeof req.body.stellarPublicKey === 'string') {
+        user.stellarPublicKey = req.body.stellarPublicKey.trim().toUpperCase();
       }
 
       const saved = await this.userRepo.save(user);
@@ -410,7 +465,7 @@ export class AuthController {
 
   async completeOnboarding(req: Request, res: Response) {
     try {
-      const userId = (req as any).userId;
+      const userId = req.userId;
 
       const user = await this.userRepo.findOne({ where: { id: userId } });
       if (!user) {
@@ -427,9 +482,18 @@ export class AuthController {
     }
   }
 
+  async logout(req: Request, res: Response) {
+    res.clearCookie('authToken', {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    });
+    return res.json({ message: 'Logged out' });
+  }
+
   async getWalletInfo(req: Request, res: Response) {
     try {
-      const userId = (req as any).userId;
+      const userId = req.userId;
       const user = await this.userRepo.findOne({ where: { id: userId } });
 
       if (!user || !user.stellarPublicKey) {

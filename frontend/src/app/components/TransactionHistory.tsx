@@ -3,148 +3,143 @@ import { Button } from "@/app/components/ui/button";
 import { Badge } from "@/app/components/ui/badge";
 import { Input } from "@/app/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select";
-import { 
-  ArrowLeft, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  Search, 
-  Filter, 
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Search,
+  Filter,
   Download,
   CheckCircle2,
   XCircle,
   ExternalLink
 } from "lucide-react";
-import { useState } from "react";
+import { transactionService, Transaction as apiTransaction } from "@/services/transaction.service";
+import { accountService } from "@/services/account.service";
+import { useAuth } from "@/app/context/AuthContext";
+import { format } from "date-fns";
+import { useEffect, useState } from "react";
 
 interface Transaction {
   id: string;
   hash: string;
-  type: "send" | "receive";
+  type: "send" | "receive" | "deposit";
   amount: string;
   asset: string;
   from: string;
   to: string;
   timestamp: string;
   date: string;
-  status: "completed" | "failed";
+  status: "completed" | "failed" | "pending";
   memo?: string;
   fee: string;
+  onChain?: boolean;
+  rawDate: Date;
 }
 
 interface TransactionHistoryProps {
   onNavigate: (page: string) => void;
 }
 
-const mockHistory: Transaction[] = [
-  {
-    id: "1",
-    hash: "a1b2c3d4e5f6g7h8i9j0",
-    type: "send",
-    amount: "1,500.00",
-    asset: "XLM",
-    from: "GABC...XYZ789 (You)",
-    to: "GDXYZ...ABC123",
-    timestamp: "10:45 AM",
-    date: "Today",
-    status: "completed",
-    memo: "Invoice #12345",
-    fee: "0.00001"
-  },
-  {
-    id: "2",
-    hash: "k1l2m3n4o5p6q7r8s9t0",
-    type: "receive",
-    amount: "5,000.00",
-    asset: "XLM",
-    from: "GMNOP...QRS789",
-    to: "GABC...XYZ789 (You)",
-    timestamp: "08:20 AM",
-    date: "Today",
-    status: "completed",
-    fee: "0.00001"
-  },
-  {
-    id: "3",
-    hash: "u1v2w3x4y5z6a7b8c9d0",
-    type: "send",
-    amount: "750.50",
-    asset: "USDC",
-    from: "GABC...XYZ789 (You)",
-    to: "GDEF...MNO456",
-    timestamp: "04:15 PM",
-    date: "Yesterday",
-    status: "completed",
-    memo: "Payment for services",
-    fee: "0.00001"
-  },
-  {
-    id: "4",
-    hash: "e1f2g3h4i5j6k7l8m9n0",
-    type: "receive",
-    amount: "2,300.75",
-    asset: "XLM",
-    from: "GHIJ...PQR012",
-    to: "GABC...XYZ789 (You)",
-    timestamp: "11:30 AM",
-    date: "Yesterday",
-    status: "completed",
-    fee: "0.00001"
-  },
-  {
-    id: "5",
-    hash: "o1p2q3r4s5t6u7v8w9x0",
-    type: "send",
-    amount: "450.00",
-    asset: "XLM",
-    from: "GABC...XYZ789 (You)",
-    to: "GSTU...VWX345",
-    timestamp: "03:45 PM",
-    date: "Jan 25",
-    status: "failed",
-    memo: "Refund",
-    fee: "0.00001"
-  },
-  {
-    id: "6",
-    hash: "y1z2a3b4c5d6e7f8g9h0",
-    type: "receive",
-    amount: "8,900.00",
-    asset: "XLM",
-    from: "GABC...DEF678",
-    to: "GABC...XYZ789 (You)",
-    timestamp: "09:15 AM",
-    date: "Jan 24",
-    status: "completed",
-    memo: "Monthly payment",
-    fee: "0.00001"
-  },
-  {
-    id: "7",
-    hash: "i1j2k3l4m5n6o7p8q9r0",
-    type: "send",
-    amount: "1,250.25",
-    asset: "USDC",
-    from: "GABC...XYZ789 (You)",
-    to: "GHIJ...KLM901",
-    timestamp: "02:30 PM",
-    date: "Jan 23",
-    status: "completed",
-    fee: "0.00001"
-  }
-];
-
 export function TransactionHistory({ onNavigate }: TransactionHistoryProps) {
+  const { user } = useAuth();
+  const [history, setHistory] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterAsset, setFilterAsset] = useState("all");
 
-  const filteredTransactions = mockHistory.filter(tx => {
-    const matchesSearch = 
+  const truncateAddress = (addr: string) => {
+    if (!addr || addr.length < 20) return addr;
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      if (!user?.accountId) return;
+      try {
+        setLoading(true);
+        const [info, acc] = await Promise.all([
+          accountService.getAccountWalletInfo(user.accountId),
+          accountService.getAccount(user.accountId)
+        ]);
+
+        const [txs, onChain] = await Promise.all([
+          transactionService.getTransactionsByAccount(user.accountId),
+          transactionService.getOnChainHistory(info.publicKey)
+        ]);
+
+        const mappedInternal: Transaction[] = txs.map(tx => ({
+          id: tx.id,
+          hash: tx.id,
+          type: tx.creator.id === user.id ? "send" : "receive",
+          amount: tx.amount,
+          asset: tx.asset || "XLM",
+          from: tx.creator.firstName,
+          to: tx.to,
+          timestamp: format(new Date(tx.createdAt), "hh:mm a"),
+          date: format(new Date(tx.createdAt), "MMM dd, yyyy"),
+          status: tx.status === 'executed' ? "completed" : tx.status === 'rejected' ? "failed" : "pending",
+          memo: tx.memo,
+          fee: "0.00001",
+          rawDate: new Date(tx.createdAt)
+        }));
+
+        const mappedOnChain: Transaction[] = (onChain || [])
+          .filter(tx => tx.type === 'payment' || tx.type === 'create_account' || tx.type === 'path_payment_strict_receive' || tx.type === 'path_payment_strict_send')
+          .map(tx => {
+            const dest = tx.to || tx.account || '';
+            const src = tx.from || tx.funder || '';
+            const amt = tx.amount || tx.starting_balance || '0';
+            const isIncoming = dest === info.publicKey;
+            return {
+              id: tx.id,
+              hash: tx.id,
+              type: isIncoming ? "deposit" as const : "send" as const,
+              amount: amt,
+              asset: tx.asset_type === 'native' ? "XLM" : (tx.asset_code || "XLM"),
+              from: src,
+              to: dest,
+              timestamp: format(new Date(tx.created_at), "hh:mm a"),
+              date: format(new Date(tx.created_at), "MMM dd, yyyy"),
+              status: "completed" as const,
+              memo: "",
+              fee: tx.fee_charged || "0.00001",
+              onChain: true,
+              rawDate: new Date(tx.created_at)
+            };
+          });
+
+        const allTxs = [...mappedInternal.filter(t => t.status !== 'completed'), ...mappedOnChain]
+          .sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime());
+
+        setHistory(allTxs);
+      } catch (err) {
+        console.error("Failed to load history", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadHistory();
+  }, [user?.accountId]);
+
+  const stats = {
+    totalSent: history.filter(tx => tx.type === "send" && tx.status === "completed")
+      .reduce((acc, tx) => acc + Number(tx.amount), 0),
+    totalReceived: history.filter(tx => (tx.type === "receive" || tx.type === "deposit") && tx.status === "completed")
+      .reduce((acc, tx) => acc + Number(tx.amount), 0),
+    completedCount: history.filter(tx => tx.status === "completed").length,
+    totalCount: history.length
+  };
+
+  const filteredTransactions = history.filter(tx => {
+    const matchesSearch =
       tx.hash.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tx.from.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tx.to.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (tx.memo && tx.memo.toLowerCase().includes(searchQuery.toLowerCase()));
-    
+
     const matchesType = filterType === "all" || tx.type === filterType;
     const matchesAsset = filterAsset === "all" || tx.asset === filterAsset;
 
@@ -152,87 +147,82 @@ export function TransactionHistory({ onNavigate }: TransactionHistoryProps) {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" onClick={() => onNavigate("dashboard")}>
-          <ArrowLeft className="w-5 h-5" />
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => onNavigate("dashboard")}
+          className="rounded-full hover:bg-white/5 border border-white/5"
+        >
+          <ArrowLeft className="w-5 h-5 text-primary" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-3xl">Transaction History</h1>
-          <p className="text-muted-foreground">View all your completed transactions</p>
+          <h1 className="text-4xl font-bold tracking-tight">Transaction <span className="text-primary">History</span></h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60 mt-1">Full record of all wallet activity</p>
         </div>
-        <Button variant="outline">
+        <Button variant="outline" className="hidden sm:flex bg-white/5 border-white/5 hover:border-primary/50 text-[10px] font-bold uppercase tracking-widest px-6 h-10">
           <Download className="w-4 h-4 mr-2" />
-          Export
+          EXPORT DATA
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground mb-1">Total Sent</div>
-            <div className="text-2xl">3,950.75 XLM</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground mb-1">Total Received</div>
-            <div className="text-2xl">16,200.75 XLM</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground mb-1">Completed</div>
-            <div className="text-2xl">{mockHistory.filter(tx => tx.status === "completed").length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground mb-1">This Month</div>
-            <div className="text-2xl">{mockHistory.length}</div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {[
+          { label: 'Total Sent', value: stats.totalSent.toLocaleString(), suffix: 'XLM' },
+          { label: 'Total Received', value: stats.totalReceived.toLocaleString(), suffix: 'XLM' },
+          { label: 'Confirmed', value: stats.completedCount, suffix: 'TXS' },
+          { label: 'All Transactions', value: stats.totalCount, suffix: 'TXS' },
+        ].map((stat) => (
+          <Card key={stat.label} className="relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/2 rounded-full blur-2xl -mr-12 -mt-12 transition-colors group-hover:bg-primary/5"></div>
+            <CardContent className="p-6">
+              <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-40 mb-3">{stat.label}</div>
+              <div className="text-2xl font-bold tracking-tighter">
+                {stat.value} <span className="text-[10px] opacity-40 uppercase ml-0.5">{stat.suffix}</span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filter Transactions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <Card className="bg-[#17171C]/50 border-white/5">
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
-                placeholder="Search by hash, address, or memo..."
+                placeholder="SEARCH BY HASH OR ADDRESS..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-12 h-12 bg-white/5 border-white/10 hover:border-white/20 focus:border-primary/50 transition-all rounded-xl text-[10px] font-bold uppercase tracking-widest"
               />
             </div>
             <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger>
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue />
+              <SelectTrigger className="h-12 bg-white/5 border-white/5 rounded-xl text-[10px] font-bold uppercase tracking-widest px-4">
+                <div className="flex items-center">
+                  <Filter className="w-4 h-4 mr-3 opacity-40" />
+                  <SelectValue />
+                </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="send">Sent Only</SelectItem>
-                <SelectItem value="receive">Received Only</SelectItem>
+                <SelectItem value="all">ALL ACTIVITY</SelectItem>
+                <SelectItem value="send">SENT</SelectItem>
+                <SelectItem value="receive">RECEIVED</SelectItem>
+                <SelectItem value="deposit">DEPOSITS</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterAsset} onValueChange={setFilterAsset}>
-              <SelectTrigger>
+              <SelectTrigger className="h-12 bg-white/5 border-white/5 rounded-xl text-[10px] font-bold uppercase tracking-widest px-4">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Assets</SelectItem>
+                <SelectItem value="all">ALL ASSETS</SelectItem>
                 <SelectItem value="XLM">XLM</SelectItem>
-                <SelectItem value="USDC">USDC</SelectItem>
-                <SelectItem value="BTC">BTC</SelectItem>
-                <SelectItem value="ETH">ETH</SelectItem>
+                <SelectItem value="USDC">USDC (BRIDGED)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -242,98 +232,106 @@ export function TransactionHistory({ onNavigate }: TransactionHistoryProps) {
       {/* Transactions List */}
       <Card>
         <CardHeader>
-          <CardTitle>All Transactions</CardTitle>
-          <CardDescription>
-            Showing {filteredTransactions.length} of {mockHistory.length} transactions
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-xl">Activity Log</CardTitle>
+              <CardDescription>
+                Showing {filteredTransactions.length} of {history.length} transactions
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-1">
-            {filteredTransactions.map((tx) => (
-              <div
-                key={tx.id}
-                className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors group"
-              >
-                <div className="flex items-center space-x-4 flex-1">
-                  {/* Icon */}
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    tx.type === "send"
-                      ? "bg-blue-100 text-blue-600"
-                      : "bg-green-100 text-green-600"
-                  }`}>
-                    {tx.type === "send" ? (
-                      <ArrowUpRight className="w-6 h-6" />
-                    ) : (
-                      <ArrowDownLeft className="w-6 h-6" />
-                    )}
-                  </div>
-
-                  {/* Transaction Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-3 mb-1">
-                      <div className="font-medium">
-                        {tx.type === "send" ? "Sent" : "Received"} {tx.amount} {tx.asset}
-                      </div>
-                      <Badge
-                        variant={tx.status === "completed" ? "default" : "destructive"}
-                        className={tx.status === "completed" ? "bg-green-100 text-green-700 hover:bg-green-100" : ""}
-                      >
-                        {tx.status === "completed" ? (
-                          <CheckCircle2 className="w-3 h-3 mr-1" />
-                        ) : (
-                          <XCircle className="w-3 h-3 mr-1" />
-                        )}
-                        {tx.status}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {tx.type === "send" ? "To:" : "From:"} {tx.type === "send" ? tx.to : tx.from}
-                    </div>
-                    {tx.memo && (
-                      <div className="text-sm text-muted-foreground mt-1">
-                        <span className="text-xs bg-muted px-2 py-0.5 rounded">
-                          {tx.memo}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Date/Time */}
-                  <div className="text-right hidden md:block">
-                    <div className="text-sm font-medium">{tx.date}</div>
-                    <div className="text-sm text-muted-foreground">{tx.timestamp}</div>
-                  </div>
-
-                  {/* Hash & Link */}
-                  <div className="text-right hidden lg:block">
-                    <div className="text-sm text-muted-foreground font-mono mb-1">
-                      {tx.hash.substring(0, 10)}...
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <ExternalLink className="w-3 h-3 mr-1" />
-                      View
-                    </Button>
-                  </div>
-                </div>
+          {filteredTransactions.length === 0 ? (
+            <div className="text-center py-20 border-2 border-dashed border-white/5 rounded-3xl opacity-40">
+              <div className="flex justify-center mb-6">
+                <Search className="w-12 h-12 text-muted-foreground/50" />
               </div>
-            ))}
-          </div>
-
-          {filteredTransactions.length === 0 && (
-            <div className="text-center py-12">
-              <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                  <Search className="w-8 h-8 text-muted-foreground" />
-                </div>
-              </div>
-              <h3 className="text-lg mb-2">No transactions found</h3>
-              <p className="text-muted-foreground">
-                Try adjusting your search or filter criteria
+              <h3 className="text-xs uppercase font-bold tracking-[0.2em] mb-2">No Transactions Found</h3>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">
+                Try adjusting your search or filters
               </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredTransactions.map((tx) => (
+                <div
+                  key={tx.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 group gap-4 sm:gap-6"
+                >
+                  <div className="flex items-center space-x-4 sm:space-x-6 flex-1 min-w-0">
+                    {/* Icon */}
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center relative transition-transform group-hover:scale-110 shrink-0 ${tx.type === "send"
+                      ? "bg-primary/10 text-primary border border-primary/20"
+                      : "bg-status-success/10 text-status-success border border-status-success/20"
+                      }`}>
+                      {tx.type === "send" ? (
+                        <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                      ) : (
+                        <ArrowDownLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                      )}
+                    </div>
+
+                    {/* Transaction Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1">
+                        <span className="font-bold text-[10px] sm:text-sm uppercase tracking-tight truncate">
+                          {tx.type === "deposit" ? "DEPOSIT" : tx.type === "send" ? "OUTGOING" : "INCOMING"}
+                        </span>
+                        <div
+                          className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest ${tx.status === "completed"
+                            ? "bg-status-success/10 text-status-success border border-status-success/20"
+                            : tx.status === "pending"
+                              ? "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                              : "bg-status-error/10 text-status-error border border-status-error/20"
+                            }`}
+                        >
+                          {tx.status}
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-muted-foreground font-medium flex items-center gap-2">
+                        <span className="font-mono text-primary/70 truncate">{truncateAddress(tx.type === "send" ? tx.to : tx.from)}</span>
+                        {tx.onChain && (
+                          <div className="hidden xs:flex items-center gap-1 shrink-0">
+                            <div className="w-1 h-1 rounded-full bg-status-success"></div>
+                            <span className="text-[8px] font-bold text-status-success/60 uppercase tracking-widest">ON-CHAIN</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between sm:justify-end gap-6 sm:gap-8">
+                    {/* Date/Time (Mobile) */}
+                    <div className="text-left sm:hidden">
+                      <div className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground opacity-60 mb-0.5">{tx.date}</div>
+                      <div className="text-[8px] text-muted-foreground font-bold opacity-30">{tx.timestamp}</div>
+                    </div>
+
+                    {/* Date/Time (Desktop) */}
+                    <div className="text-right hidden md:block">
+                      <div className="text-[10px] font-bold uppercase tracking-widest mb-1">{tx.date}</div>
+                      <div className="text-[10px] text-muted-foreground font-bold opacity-40">{tx.timestamp}</div>
+                    </div>
+
+                    {/* Amount & Link */}
+                    <div className="text-right sm:min-w-[120px]">
+                      <div className="text-base sm:text-lg font-bold tracking-tighter sm:mb-1">
+                        {tx.amount} <span className="text-[10px] font-medium opacity-40 uppercase ml-0.5">{tx.asset}</span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="hidden sm:flex h-8 text-[9px] font-bold uppercase tracking-widest bg-white/5 border-white/5 hover:border-primary/50 opacity-0 group-hover:opacity-100 transition-all rounded-lg"
+                        onClick={() => window.open(`https://stellar.expert/explorer/testnet/tx/${tx.id}`, '_blank')}
+                      >
+                        <ExternalLink className="w-3 h-3 mr-2" />
+                        EXPLORER
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>

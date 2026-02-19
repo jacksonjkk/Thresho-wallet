@@ -1,12 +1,12 @@
 @import 'tailwindcss' source(none);
-@source '../**/*.{js,ts,jsx,tsx}';
-
 @import 'tw-animate-css';
 
-/* Custom scrollbar styles */
+@source '../**/*.{js,ts,jsx,tsx}';
+
+/* Clean scrollbar — Editorial style */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -14,10 +14,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-  border-radius: 4px;
+  background: #D1D5DB;
+  border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  background: #9CA3AF;
 }

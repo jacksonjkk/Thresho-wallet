@@ -5,47 +5,47 @@ import { Signer } from './Signer';
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  firstName: string;
+  firstName!: string;
 
   @Column()
-  lastName: string;
+  lastName!: string;
 
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column()
-  passwordHash: string;
+  passwordHash!: string;
 
   @Column({ default: false })
-  biometricEnabled: boolean;
+  biometricEnabled!: boolean;
 
-  @Column({ nullable: true })
-  biometricData: string;
+  @Column('text', { nullable: true })
+  biometricData: string | null = null;
 
-  @Column({ nullable: true })
-  avatarUrl: string;
+  @Column('text', { nullable: true })
+  avatarUrl: string | null = null;
 
   @Column({ default: false })
-  hasCompletedOnboarding: boolean;
+  hasCompletedOnboarding!: boolean;
 
-  @Column({ nullable: true })
-  stellarPublicKey: string;
+  @Column('varchar', { nullable: true })
+  stellarPublicKey: string | null = null;
 
-  @Column({ nullable: true })
-  stellarSecretEncrypted: string;
+  @Column('text', { nullable: true })
+  stellarSecretEncrypted: string | null = null;
 
-  @Column({ nullable: true })
-  stellarSecretIv: string;
+  @Column('varchar', { nullable: true })
+  stellarSecretIv: string | null = null;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @OneToMany(() => Account, (account) => account.owner)
-  ownedAccounts: Account[];
+  ownedAccounts!: Account[];
 
   @OneToMany(() => Signer, (signer) => signer.user)
-  signerAccounts: Signer[];
+  signerAccounts!: Signer[];
 }

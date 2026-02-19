@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService } from '../../services/auth.service';
 import { apiClient } from '../../services/api';
-import { accountService, Account } from '../../services/account.service';
+import { accountService, Account, CreateAccountRequest } from '../../services/account.service';
 
 export interface User {
   id: string;
@@ -30,9 +30,11 @@ interface AuthContextType {
   connectWallet: (publicKey: string, signedXdr: string) => Promise<void>;
   disconnectWallet: () => void;
   completeOnboarding: () => Promise<void>;
-  saveAccountData: (accountData: { name: string; threshold: number; signers: any[] }) => Promise<void>;
+  saveAccountData: (accountData: CreateAccountRequest) => Promise<void>;
+  refreshAccountData: () => Promise<void>;
   updateOnboarding: (step: 'welcome' | 'wallet' | 'account') => void;
-  updateProfile: (data: { firstName?: string; lastName?: string; avatarUrl?: string | null }) => Promise<void>;
+  updateProfile: (data: { firstName?: string; lastName?: string; avatarUrl?: string | null; stellarPublicKey?: string }) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,62 +51,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Initialize from localStorage and verify token
   useEffect(() => {
     const initializeAuth = async () => {
-      const storedUser = localStorage.getItem('user');
-      const storedToken = localStorage.getItem('authToken');
-      
-      if (storedToken) {
-        apiClient.setToken(storedToken);
-        
-        if (storedUser) {
+      try {
+        // Verify session by fetching profile (cookie-based)
+        const profile = await authService.getProfile();
+
+        const hasCompletedOnboarding = profile.hasCompletedOnboarding || false;
+
+        let account: Account | undefined;
+        if (hasCompletedOnboarding) {
           try {
-            // Verify token by fetching profile
-            const profile = await authService.getProfile();
-            
-            // Check if user has completed onboarding
-            const hasCompletedOnboarding = profile.hasCompletedOnboarding || false;
-            
-            // Fetch user's account if onboarding completed
-            let account: Account | undefined;
-            if (hasCompletedOnboarding) {
-              try {
-                const accounts = await accountService.getUserAccounts();
-                if (accounts && accounts.length > 0) {
-                  account = accounts[0];
-                }
-              } catch (err) {
-                console.error('Failed to fetch accounts on init:', err);
-              }
+            const accounts = await accountService.getUserAccounts();
+            if (accounts && accounts.length > 0) {
+              account = accounts[0];
             }
-            
-            const user: User = {
-              id: profile.id,
-              firstName: profile.firstName,
-              lastName: profile.lastName,
-              email: profile.email,
-              hasCompletedOnboarding: hasCompletedOnboarding,
-              walletConnected: !!profile.stellarPublicKey,
-              publicKey: profile.stellarPublicKey || undefined,
-              accountId: account?.id,
-              account: account,
-              avatarUrl: profile.avatarUrl ?? null,
-            };
-            setUser(user);
-            
-            // Set isFirstLogin if onboarding not completed
-            if (!hasCompletedOnboarding) {
-              setIsFirstLogin(true);
-              localStorage.setItem('isFirstLogin', 'true');
-            }
-          } catch (error) {
-            // Token is invalid, clear it
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('user');
-            localStorage.removeItem('isFirstLogin');
-            apiClient.setToken(null);
+          } catch (err) {
+            console.error('Failed to fetch accounts on init:', err);
           }
         }
+
+        const user: User = {
+          id: profile.id,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          email: profile.email,
+          hasCompletedOnboarding: hasCompletedOnboarding,
+          walletConnected: !!profile.stellarPublicKey,
+          publicKey: profile.stellarPublicKey || undefined,
+          accountId: account?.id,
+          account: account,
+          avatarUrl: profile.avatarUrl ?? null,
+        };
+        setUser(user);
+
+        if (!hasCompletedOnboarding) {
+          setIsFirstLogin(true);
+          localStorage.setItem('isFirstLogin', 'true');
+        }
+      } catch (error) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('isFirstLogin');
+        setUser(null);
       }
-      
+
       setIsLoading(false);
     };
 
@@ -124,10 +112,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     try {
       const response = await authService.login(email, password);
-      
-      apiClient.setToken(response.token);
-      localStorage.setItem('authToken', response.token);
-      
+
       // Check if this is first login (onboarding not completed)
       if (!response.user.hasCompletedOnboarding) {
         setIsFirstLogin(true);
@@ -136,7 +121,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsFirstLogin(false);
         localStorage.removeItem('isFirstLogin');
       }
-      
+
       // Try to fetch user's account if onboarding completed
       let account: Account | undefined;
       if (response.user.hasCompletedOnboarding) {
@@ -186,7 +171,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const connectWallet = async (publicKey: string, signedXdr: string) => {
     try {
       console.log('Connecting wallet with key:', publicKey);
-      
+
       // Validate public key format
       if (!publicKey.match(/^G[A-Z2-7]{55}$/)) {
         throw new Error('Invalid Stellar public key format (must start with G and be 56 chars)');
@@ -196,8 +181,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Verify with backend
         await authService.verifyChallenge(signedXdr, publicKey);
         console.log('Challenge verified');
+
+        // Persist the public key to the user profile
+        await authService.updateProfile({ stellarPublicKey: publicKey });
+        console.log('Public key persisted to backend profile');
       } else {
         console.log('Manual wallet input - skipping signature verification');
+        // Still persist even if manual? Docs/Logic suggests manual is also allowed
+        await authService.updateProfile({ stellarPublicKey: publicKey });
       }
 
       // Update user state
@@ -235,7 +226,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const completeOnboarding = async () => {
     try {
       await authService.completeOnboarding();
-      
+
       setUser(prev => prev ? {
         ...prev,
         hasCompletedOnboarding: true
@@ -250,13 +241,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const saveAccountData = async (accountData: { name: string; threshold: number; signers: any[] }) => {
+  const saveAccountData = async (accountData: CreateAccountRequest) => {
     try {
       const result = await accountService.createAccount(accountData);
-      
+
       // Fetch the created account
       const account = await accountService.getAccount(result.accountId);
-      
+
       // Update user with account info
       setUser(prev => prev ? {
         ...prev,
@@ -269,6 +260,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('hasCompletedOnboarding', 'true');
     } catch (error) {
       console.error('Failed to save account data:', error);
+      throw error;
+    }
+  };
+
+  const refreshAccountData = async () => {
+    try {
+      const accounts = await accountService.getUserAccounts();
+      const account = accounts && accounts.length > 0 ? accounts[0] : undefined;
+
+      setUser(prev => prev ? {
+        ...prev,
+        accountId: account?.id,
+        account: account,
+      } : null);
+    } catch (error) {
+      console.error('Failed to refresh account data:', error);
       throw error;
     }
   };
@@ -297,9 +304,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
     setIsFirstLogin(false);
     localStorage.removeItem('user');
-    localStorage.removeItem('authToken');
+
     localStorage.removeItem('hasCompletedOnboarding');
     localStorage.removeItem('isFirstLogin');
+  };
+
+  const deleteAccount = async () => {
+    try {
+      await authService.deleteAccount();
+      setUser(null);
+      setIsFirstLogin(false);
+      localStorage.clear();
+    } catch (error) {
+      console.error('Failed to delete account:', error);
+      throw error;
+    }
   };
 
   const value: AuthContextType = {
@@ -313,8 +332,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     disconnectWallet,
     completeOnboarding,
     saveAccountData,
+    refreshAccountData,
     updateOnboarding,
     updateProfile,
+    deleteAccount,
   };
 
   return (

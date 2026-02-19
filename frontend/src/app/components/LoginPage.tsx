@@ -29,12 +29,12 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
   const [signupError, setSignupError] = useState("");
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [signupLoading, setSignupLoading] = useState(false);
-  
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
-    
+
     try {
       await login(email, password);
       onLogin();
@@ -107,59 +107,60 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-cyan-50 to-purple-50">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
         {/* Left Side - Illustration */}
         <div className="hidden lg:flex flex-col items-center justify-center space-y-8">
           <div className="relative w-full max-w-md">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl blur-3xl opacity-20"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-blue-100">
-              <div className="flex items-center justify-center mb-8">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-cyan-500 to-purple-600 rounded-full blur-xl opacity-50"></div>
-                  <div className="relative bg-white rounded-full p-6 shadow-lg">
-                    <img src="/logo.png" alt="Thresho" className="w-32 h-32" />
-                  </div>
+            <div className="glass-card rounded-2xl p-12 border border-white/10 relative overflow-hidden group">
+              {/* Decorative Glow */}
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl group-hover:bg-primary/30 transition-all duration-500"></div>
+              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-all duration-500"></div>
+
+              <div className="flex items-center justify-center mb-8 animate-float">
+                <div className="p-4 relative">
+                  <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full"></div>
+                  <img src="/logo.png" alt="Thresho" className="w-32 h-32 relative z-10" />
                 </div>
               </div>
-              <h1 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-blue-600 via-cyan-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-5xl text-center mb-4 tracking-tighter" style={{ fontFamily: 'var(--font-serif)' }}>
                 Thresho
               </h1>
-              <p className="text-center text-muted-foreground mb-8">
-                Multi-Signature Blockchain Wallet
+              <p className="text-center text-muted-foreground mb-8 text-sm font-medium tracking-widest uppercase">
+                Secure Multi-Signature Wallet
               </p>
-              
-              Visual Multi-Sig Illustration
+
+              {/* Visual Multi-Sig Illustration */}
               <div className="flex items-center justify-center space-x-4 mb-6">
                 <div className="flex items-center space-x-2">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-                    <img src="/logo.png" alt="Thresho" className="w-12 h-12" />
+                  <div className="w-10 h-10 rounded-xl bg-secondary/50 backdrop-blur-md flex items-center justify-center border border-white/5">
+                    <img src="/logo.png" alt="Thresho" className="w-8 h-8 opacity-80" />
                   </div>
-                  <div className="h-0.5 w-8 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                  <div className="h-px w-8 bg-gradient-to-r from-border to-transparent"></div>
                 </div>
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center text-white shadow-xl">
-                  <Network className="w-6 h-6" />
+                <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white shadow-[0_0_30px_rgba(99,102,241,0.4)]">
+                  <Network className="w-7 h-7" />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="h-0.5 w-8 bg-gradient-to-r from-purple-500 to-purple-600"></div>
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg">
-                    <img src="/logo.png" alt="Thresho" className="w-12 h-12" />
+                  <div className="h-px w-8 bg-gradient-to-l from-border to-transparent"></div>
+                  <div className="w-10 h-10 rounded-xl bg-secondary/50 backdrop-blur-md flex items-center justify-center border border-white/5">
+                    <img src="/logo.png" alt="Thresho" className="w-8 h-8 opacity-80" />
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-3 text-sm text-muted-foreground">
                 <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <span>Secure multi-signature transactions</span>
+                  <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(99,102,241,0.6)]"></div>
+                  <span className="font-medium">Secure multi-signature transactions</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 rounded-full bg-cyan-500"></div>
-                  <span>Enterprise-grade blockchain security</span>
+                  <div className="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]"></div>
+                  <span className="font-medium">Enterprise-grade security</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                  <span>Collaborative wallet management</span>
+                  <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.6)]"></div>
+                  <span className="font-medium">Collaborative wallet management</span>
                 </div>
               </div>
             </div>
@@ -168,16 +169,16 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
 
         {/* Right Side - Login Form */}
         <div className="flex items-center justify-center">
-          <Card className="w-full max-w-md border-0 shadow-2xl">
+          <Card className="w-full max-w-md">
             <CardHeader className="space-y-1">
               <div className="flex items-center justify-center mb-4 lg:hidden">
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-full p-3">
+                <div className="p-3">
                   <img src="/logo.png" alt="Thresho" className="w-16 h-16" />
                 </div>
               </div>
-              <CardTitle className="text-center">Welcome to Thresho</CardTitle>
+              <CardTitle className="text-center text-2xl font-bold tracking-tight">Welcome Back</CardTitle>
               <CardDescription className="text-center">
-                Sign in to your secure multi-sig wallet
+                Securely sign into your wallet
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -225,14 +226,16 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                     </div>
 
                     {loginError && (
-                      <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
+                      <div className="p-3 bg-destructive/5 border border-destructive/20 rounded-sm text-sm text-destructive">
                         {loginError}
                       </div>
                     )}
 
-                    <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800" disabled={isLoading}>
-                      {isLoading ? "Signing in..." : "Sign In"}
-                    </Button>
+                    <div className="flex justify-center pt-2">
+                      <Button type="submit" className="w-full max-w-xs" size="lg" disabled={isLoading}>
+                        {isLoading ? "Signing in..." : "Sign In"}
+                      </Button>
+                    </div>
 
                     <div className="relative my-6">
                       <div className="absolute inset-0 flex items-center">
@@ -243,44 +246,48 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                       </div>
                     </div>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full"
-                      onClick={handleBiometricLogin}
-                      disabled={isLoading}
-                    >
-                      <Fingerprint className="w-4 h-4 mr-2" />
-                      Biometric Login
-                    </Button>
+                    <div className="flex justify-center">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full max-w-xs"
+                        onClick={handleBiometricLogin}
+                        disabled={isLoading}
+                      >
+                        <Fingerprint className="w-4 h-4 mr-2 text-primary" />
+                        Biometric Login
+                      </Button>
+                    </div>
 
                     <div className="relative my-6">
                       <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t"></span>
+                        <span className="w-full border-t border-white/5"></span>
                       </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-card px-2 text-muted-foreground">Or</span>
+                      <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
+                        <span className="bg-card px-4 text-muted-foreground">Social Connect</span>
                       </div>
                     </div>
 
-                    <div className="flex gap-2 justify-center">
+                    <div className="flex gap-4 justify-center">
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
+                        className="rounded-full w-12 h-12 hover:border-primary/50 transition-all"
                         disabled={isLoading}
                         title="Continue with Gmail"
                       >
-                        <Mail className="w-4 h-4" />
+                        <Mail className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
+                        className="rounded-full w-12 h-12 hover:border-primary/50 transition-all"
                         disabled={isLoading}
                         title="Continue with X"
                       >
-                        <Twitter className="w-4 h-4" />
+                        <Twitter className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
                       </Button>
                     </div>
                   </form>
@@ -352,52 +359,57 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                     </div>
 
                     {signupError && (
-                      <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
+                      <div className="p-3 bg-destructive/5 border border-destructive/20 rounded-sm text-sm text-destructive">
                         {signupError}
                       </div>
                     )}
 
                     {signupSuccess && (
-                      <div className="p-3 bg-green-50 border border-green-200 rounded-md text-sm text-green-700">
+                      <div className="p-3 bg-[#065F46]/5 border border-[#065F46]/20 rounded-sm text-sm text-[#065F46]">
                         Account created successfully! You can now log in.
                       </div>
                     )}
 
-                    <Button
-                      type="submit"
-                      className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                      disabled={signupLoading || isLoading}
-                    >
-                      {signupLoading ? "Creating account..." : "Create Account"}
-                    </Button>
+                    <div className="flex justify-center pt-2">
+                      <Button
+                        type="submit"
+                        className="w-full max-w-xs"
+                        size="lg"
+                        disabled={signupLoading || isLoading}
+                      >
+                        {signupLoading ? "Processing..." : "Create Account"}
+                      </Button>
+                    </div>
 
                     <div className="relative my-6">
                       <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t"></span>
+                        <span className="w-full border-t border-white/5"></span>
                       </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-card px-2 text-muted-foreground">Or</span>
+                      <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
+                        <span className="bg-card px-4 text-muted-foreground">Traditional Auth</span>
                       </div>
                     </div>
 
-                    <div className="flex gap-2 justify-center">
+                    <div className="flex gap-4 justify-center">
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
+                        className="rounded-full w-12 h-12 hover:border-primary/50 transition-all"
                         disabled={signupLoading || isLoading}
                         title="Continue with Gmail"
                       >
-                        <Mail className="w-4 h-4" />
+                        <Mail className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
+                        className="rounded-full w-12 h-12 hover:border-primary/50 transition-all"
                         disabled={signupLoading || isLoading}
                         title="Continue with X"
                       >
-                        <Twitter className="w-4 h-4" />
+                        <Twitter className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
                       </Button>
                     </div>
                   </form>

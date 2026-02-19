@@ -1,19 +1,21 @@
 import { Button } from "@/app/components/ui/button";
 import { Badge } from "@/app/components/ui/badge";
-import { 
-  LayoutDashboard, 
-  Send, 
-  Clock, 
-  History, 
-  Wallet, 
+import {
+  LayoutDashboard,
+  Send,
+  Clock,
+  History,
+  Wallet,
   Settings,
   Menu,
   X,
   LogOut
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/app/context/AuthContext";
+import { accountService } from "@/services/account.service";
+import { transactionService } from "@/services/transaction.service";
 
 interface SidebarProps {
   currentPage: string;
@@ -30,9 +32,33 @@ const menuItems = [
   { id: "settings", label: "Settings", icon: Settings }
 ];
 
-export function Sidebar({ currentPage, onNavigate, pendingCount = 2 }: SidebarProps) {
+export function Sidebar({ currentPage, onNavigate, pendingCount: initialPendingCount }: SidebarProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { logout, user } = useAuth();
+  const [isOwner, setIsOwner] = useState(false);
+  const [pendingCount, setPendingCount] = useState(initialPendingCount || 0);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (user?.accountId) {
+        try {
+          const [acc, pending] = await Promise.all([
+            accountService.getAccount(user.accountId),
+            transactionService.getPendingTransactions(user.accountId)
+          ]);
+          setIsOwner(acc.owner.id === user.id);
+          setPendingCount(pending.length);
+        } catch (err) {
+          console.error("Failed to fetch sidebar stats", err);
+        }
+      }
+    };
+
+    fetchStats();
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
+  }, [user?.accountId, user?.id]);
+
   const signerCount = user?.account?.signers?.length ?? 0;
 
   const handleLogout = () => {
@@ -43,50 +69,46 @@ export function Sidebar({ currentPage, onNavigate, pendingCount = 2 }: SidebarPr
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="p-6 border-b">
-        <div className="flex items-center space-x-3">
-          <img src="/logo.png" alt="Thresho Logo" className="w-20 h-20 rounded-lg" />
+      <div className="p-8 border-b border-white/5">
+        <div className="flex items-center space-x-4">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-primary/40 blur-xl rounded-full opacity-40 group-hover:opacity-60 transition-opacity"></div>
+            <img src="/logo.png" alt="Thresho Logo" className="w-12 h-12 relative z-10 transition-transform group-hover:scale-110 duration-700" />
+          </div>
           <div>
-            <h2 className="font-semibold text-lg">Thresho</h2>
-            <p className="text-xs text-muted-foreground">Multi-Sig Wallet</p>
+            <h2 className="text-xl font-bold tracking-tighter leading-none">Thresho</h2>
+            <p className="text-[10px] text-primary/70 uppercase tracking-[0.2em] font-bold mt-1.5 opacity-80">Secure Multi-sig</p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 px-4 py-8 space-y-1 overflow-y-auto custom-scrollbar">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
-
           return (
             <Button
               key={item.id}
               variant={isActive ? "default" : "ghost"}
-              className={`w-full justify-start ${
-                isActive 
-                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700" 
-                  : ""
-              }`}
+              className={`w-full justify-start rounded-xl h-12 px-4 transition-all duration-300 group ${isActive
+                ? "shadow-lg bg-primary hover:bg-primary"
+                : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                }`}
               onClick={() => {
                 onNavigate(item.id);
                 setIsMobileOpen(false);
               }}
             >
-              <Icon className="w-4 h-4 mr-3" />
-              <span className="flex-1 text-left">{item.label}</span>
+              <Icon className={`w-4 h-4 mr-3 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-primary/60 group-hover:text-primary'}`} />
+              <span className={`flex-1 text-left text-[11px] font-bold uppercase tracking-[0.15em] ${isActive ? 'text-white' : ''}`}>{item.label}</span>
               {item.hasBadge && pendingCount > 0 && (
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
+                <Badge
+                  variant="secondary"
+                  className={`h-5 min-w-[20px] px-1.5 text-[9px] font-bold ${isActive ? "bg-white/20 text-white border-white/30" : "bg-primary/10 text-primary border-primary/20"}`}
                 >
-                  <Badge 
-                    variant="secondary"
-                    className={isActive ? "bg-white/20 text-white" : "bg-purple-100 text-purple-700"}
-                  >
-                    {pendingCount}
-                  </Badge>
-                </motion.div>
+                  {pendingCount}
+                </Badge>
               )}
             </Button>
           );
@@ -94,37 +116,40 @@ export function Sidebar({ currentPage, onNavigate, pendingCount = 2 }: SidebarPr
       </nav>
 
       {/* Account Info */}
-      <div className="p-4 border-t space-y-3">
-        <div className="p-4 rounded-lg bg-gradient-to-br from-blue-50 to-purple-50 border">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white overflow-hidden">
+      <div className="p-6 border-t border-white/5 space-y-6">
+        <div className="p-4 rounded-2xl border border-white/5 bg-white/5 group hover:border-primary/20 transition-all duration-500">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-[#1D1D26] border border-white/10 flex items-center justify-center text-primary overflow-hidden shadow-xl shrink-0">
               {user?.avatarUrl ? (
                 <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-sm font-semibold">
+                <span className="text-xs font-bold text-primary">
                   {user?.firstName?.[0]?.toUpperCase()}{user?.lastName?.[0]?.toUpperCase()}
                 </span>
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-medium text-sm">
+              <div className="font-bold text-xs tracking-tight text-white truncate">
                 {user?.firstName} {user?.lastName}
               </div>
-              <div className="text-xs text-muted-foreground truncate">{user?.email || 'user@example.com'}</div>
+              <div className="text-[9px] text-muted-foreground uppercase font-bold tracking-tight opacity-40 truncate">{user?.email || 'NOT CONNECTED'}</div>
             </div>
           </div>
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Signers {signerCount}</span>
-            <Badge variant="outline" className="text-xs">Active</Badge>
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] uppercase font-bold text-muted-foreground tracking-[0.2em] opacity-40">Wallet Status</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-status-success animate-pulse"></div>
+              <span className="text-[9px] font-bold text-status-success uppercase tracking-widest">{signerCount} Members</span>
+            </div>
           </div>
         </div>
         <Button
           onClick={handleLogout}
-          variant="outline"
-          className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+          variant="ghost"
+          className="w-full justify-start rounded-xl text-muted-foreground hover:bg-status-error/10 hover:text-status-error h-11 transition-all"
         >
-          <LogOut className="w-4 h-4 mr-2" />
-          Logout
+          <LogOut className="w-4 h-4 mr-3" />
+          <span className="font-bold text-[10px] uppercase tracking-[0.2em]">Logout</span>
         </Button>
       </div>
     </div>
@@ -134,24 +159,24 @@ export function Sidebar({ currentPage, onNavigate, pendingCount = 2 }: SidebarPr
     <>
       {/* Mobile Menu Button */}
       <Button
-        variant="ghost"
+        variant="outline"
         size="icon"
-        className="lg:hidden fixed top-4 left-4 z-50"
+        className="lg:hidden fixed top-4 right-4 z-50 bg-card"
         onClick={() => setIsMobileOpen(!isMobileOpen)}
       >
-        {isMobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        {isMobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </Button>
 
       {/* Mobile Overlay */}
       {isMobileOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+        <div
+          className="lg:hidden fixed inset-0 bg-black/30 z-40"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-64 border-r bg-card flex-col h-screen sticky top-0">
+      <aside className="hidden lg:flex w-64 border-r border-border bg-card flex-col h-screen sticky top-0">
         <SidebarContent />
       </aside>
 
@@ -160,7 +185,7 @@ export function Sidebar({ currentPage, onNavigate, pendingCount = 2 }: SidebarPr
         initial={false}
         animate={{ x: isMobileOpen ? 0 : -300 }}
         transition={{ type: "spring", damping: 20 }}
-        className="lg:hidden fixed left-0 top-0 w-64 border-r bg-card h-screen z-40 shadow-xl"
+        className="lg:hidden fixed left-0 top-0 w-64 border-r border-border bg-card h-screen z-40"
       >
         <SidebarContent />
       </motion.aside>

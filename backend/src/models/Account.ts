@@ -6,26 +6,26 @@ import { Transaction } from './Transaction';
 @Entity('accounts')
 export class Account {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  name: string;
+  name!: string;
 
-  @ManyToOne(() => User, (user) => user.ownedAccounts)
-  owner: User;
-
-  @Column()
-  threshold: number;
+  @ManyToOne(() => User, (user) => user.ownedAccounts, { onDelete: 'CASCADE' })
+  owner!: User;
 
   @Column()
-  totalWeight: number;
+  threshold!: number;
+
+  @Column()
+  totalWeight!: number;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @OneToMany(() => Signer, (signer) => signer.account, { cascade: true })
-  signers: Signer[];
+  signers!: Signer[];
 
-  @OneToMany(() => Transaction, (tx) => tx.account)
-  transactions: Transaction[];
+  @OneToMany(() => Transaction, (tx) => tx.account, { cascade: true })
+  transactions!: Transaction[];
 }

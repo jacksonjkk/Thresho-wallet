@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Toaster } from "sonner";
 import { useAuth } from "@/app/context/AuthContext";
 import { LoginPage } from "@/app/components/LoginPage";
 import { SignupPage } from "@/app/components/SignupPage";
@@ -64,15 +65,12 @@ export default function App() {
   // Show loading screen while initializing auth
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-cyan-50 to-purple-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center space-y-4">
-          <div className="relative w-16 h-16">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full blur-xl opacity-50"></div>
-            <div className="relative bg-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg">
-              <img src="/logo.png" alt="Thresho" className="w-12 h-12 animate-pulse" />
-            </div>
+          <div className="w-16 h-16">
+            <img src="/logo.png" alt="Thresho" className="w-16 h-16" />
           </div>
-          <p className="text-muted-foreground">Loading Thresho...</p>
+          <p className="text-muted-foreground text-sm">Loading Thresho...</p>
         </div>
       </div>
     );
@@ -155,17 +153,19 @@ export default function App() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar 
-        currentPage={currentPage} 
-        onNavigate={handleNavigate}
-        pendingCount={2}
-      />
-      <main className="flex-1 overflow-auto">
-        <div className="container max-w-7xl mx-auto p-6 lg:p-8">
-          {renderPage()}
-        </div>
-      </main>
-    </div>
+    <>
+      <Toaster position="top-center" richColors />
+      <div className="flex min-h-screen bg-background">
+        <Sidebar
+          currentPage={currentPage}
+          onNavigate={handleNavigate}
+        />
+        <main className="flex-1 overflow-auto">
+          <div className="container max-w-7xl mx-auto p-6 lg:p-8">
+            {renderPage()}
+          </div>
+        </main>
+      </div>
+    </>
   );
 }

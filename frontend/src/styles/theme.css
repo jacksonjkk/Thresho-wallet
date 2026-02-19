@@ -2,92 +2,73 @@
 
 :root {
   --font-size: 16px;
-  --background: #fafbff;
-  --foreground: #0f1729;
-  --card: #ffffff;
-  --card-foreground: #0f1729;
-  --popover: #ffffff;
-  --popover-foreground: #0f1729;
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  --secondary: #8b5cf6;
-  --secondary-foreground: #ffffff;
-  --muted: #e2e8f0;
-  --muted-foreground: #64748b;
-  --accent: #06b6d4;
-  --accent-foreground: #ffffff;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: transparent;
-  --input-background: #f8fafc;
-  --switch-background: #cbd5e1;
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --ring: #3b82f6;
-  --chart-1: #3b82f6;
-  --chart-2: #06b6d4;
-  --chart-3: #8b5cf6;
-  --chart-4: #14b8a6;
-  --chart-5: #6366f1;
-  --radius: 0.75rem;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #0f1729;
-  --sidebar-primary: #3b82f6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f1f5f9;
-  --sidebar-accent-foreground: #0f1729;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #3b82f6;
-  
-  /* Thresho Custom Colors - Fintech Palette */
-  --thresho-blue: #3b82f6;
-  --thresho-cyan: #06b6d4;
-  --thresho-purple: #8b5cf6;
-  --thresho-indigo: #6366f1;
-  --thresho-gradient-1: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-  --thresho-gradient-2: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-  --thresho-gradient-3: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
-  --thresho-success: #10b981;
-  --thresho-warning: #f59e0b;
-  --thresho-pending: #8b5cf6;
-}
 
-.dark {
-  --background: #0f1729;
-  --foreground: #f1f5f9;
-  --card: #1e293b;
-  --card-foreground: #f1f5f9;
-  --popover: #1e293b;
-  --popover-foreground: #f1f5f9;
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  --secondary: #8b5cf6;
-  --secondary-foreground: #ffffff;
-  --muted: #334155;
-  --muted-foreground: #94a3b8;
-  --accent: #06b6d4;
-  --accent-foreground: #ffffff;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #334155;
-  --input: #334155;
-  --ring: #3b82f6;
+  /* ── Cyber-Luxe Futuristic Palette ── */
+  --background: #0D0D11;
+  /* Deep Space */
+  --foreground: #F8FAFC;
+  /* Off White */
+  --card: rgba(23, 23, 28, 0.7);
+  /* Frosted Glass */
+  --card-foreground: #F8FAFC;
+  --popover: #17171C;
+  --popover-foreground: #F8FAFC;
+  --primary: #6366F1;
+  /* Electric Indigo */
+  --primary-foreground: #FFFFFF;
+  --secondary: #1E1E26;
+  /* Soft Charcoal */
+  --secondary-foreground: #F8FAFC;
+  --muted: #1E1E26;
+  --muted-foreground: #94A3B8;
+  /* Slate */
+  --accent: #2D2D39;
+  --accent-foreground: #F8FAFC;
+  --destructive: #F43F5E;
+  /* Rose Red */
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(255, 255, 255, 0.1);
+  /* Subtle Glass Border */
+  --input: transparent;
+  --input-background: rgba(30, 30, 38, 0.5);
+  --switch-background: #334155;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --chart-1: #3b82f6;
-  --chart-2: #06b6d4;
-  --chart-3: #8b5cf6;
-  --chart-4: #14b8a6;
-  --chart-5: #6366f1;
-  --sidebar: #1e293b;
-  --sidebar-foreground: #f1f5f9;
-  --sidebar-primary: #3b82f6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #334155;
-  --sidebar-accent-foreground: #f1f5f9;
-  --sidebar-border: #334155;
-  --sidebar-ring: #3b82f6;
+  --ring: #6366F1;
+
+  /* ── Status Colors ── */
+  --status-success: #10B981;
+  /* Emerald */
+  --status-error: #F43F5E;
+  /* Rose */
+  --status-pending: #F59E0B;
+  /* Amber */
+
+  /* ── Chart Colors ── */
+  --chart-1: #6366F1;
+  --chart-2: #10B981;
+  --chart-3: #F59E0B;
+  --chart-4: #06B6D4;
+  --chart-5: #EC4899;
+
+  --radius: 0.85rem;
+  /* Modern rounded corners */
+
+  /* ── Sidebar ── */
+  --sidebar: #0D0D11;
+  --sidebar-foreground: #F8FAFC;
+  --sidebar-primary: #6366F1;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #1E1E26;
+  --sidebar-accent-foreground: #F8FAFC;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #6366F1;
+
+  /* ── Font Families ── */
+  --font-serif: 'Outfit', 'Inter', sans-serif;
+  /* Moving towards modern sans/display */
+  --font-sans: 'Inter', 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 @theme inline {
@@ -117,9 +98,9 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
   --radius-xl: calc(var(--radius) + 4px);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -129,6 +110,37 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* ── Expose font families to Tailwind ── */
+  --font-serif: var(--font-serif);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  /* ── Custom Animations ── */
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+
+  @keyframes shimmer {
+    from {
+      background-position: 0 0;
+    }
+
+    to {
+      background-position: -200% 0;
+    }
+  }
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
+  }
 }
 
 @layer base {
@@ -138,56 +150,121 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-image:
+      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 40%),
+      radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.05) 0px, transparent 40%);
+    background-attachment: fixed;
   }
-
-  /**
-  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
-  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
-  */
 
   html {
     font-size: var(--font-size);
   }
 
+  /* ── Futuristic Headers ── */
   h1 {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    font-family: var(--font-sans);
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--foreground);
+    letter-spacing: -0.04em;
+    text-transform: none;
   }
 
   h2 {
-    font-size: var(--text-xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    font-family: var(--font-sans);
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--foreground);
+    letter-spacing: -0.03em;
   }
 
   h3 {
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    font-family: var(--font-sans);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--foreground);
+    letter-spacing: -0.02em;
   }
 
   h4 {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 700;
     line-height: 1.5;
+    color: var(--foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
   }
 
   label {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
+    font-size: 0.875rem;
+    font-weight: 500;
     line-height: 1.5;
+    color: var(--muted-foreground);
+    letter-spacing: 0.01em;
   }
 
   button {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
+    font-size: 0.875rem;
+    font-weight: 500;
     line-height: 1.5;
+    font-family: var(--font-sans);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  input {
-    font-size: var(--text-base);
+  input,
+  textarea,
+  select {
+    font-size: 0.875rem;
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
+    font-family: var(--font-sans);
+    background-color: var(--input-background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  }
+
+  /* ── Monospace for addresses/data ── */
+  .font-mono {
+    font-family: var(--font-mono) !important;
+    @apply text-primary/80;
+  }
+
+  /* ── Futuristic Card Glass Effect ── */
+  .glass-card {
+    @apply bg-card backdrop-blur-xl border-border shadow-2xl;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+  }
+
+  /* ── Custom Scrollbar ── */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
   }
 }

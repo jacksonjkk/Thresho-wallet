@@ -1,15 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { Badge } from "@/app/components/ui/badge";
-import { 
-  ArrowLeft, 
-  Copy, 
-  QrCode, 
-  Shield, 
-  User, 
+import {
+  ArrowLeft,
+  Copy,
+  QrCode,
+  Shield,
+  User,
   CheckCircle2,
   ExternalLink,
-  Wallet
+  Wallet,
+  Trash2
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { authService } from "@/services/auth.service";
@@ -28,49 +29,23 @@ interface WalletAccountProps {
   onNavigate: (page: string) => void;
 }
 
-const accountInfo = {
-  publicKey: "",
-  balance: "0.00",
-  asset: "XLM",
-  network: "Stellar Testnet",
-  created: ""
-};
-
-const thresholds = {
-  low: 1,
-  medium: 2,
-  high: 3
-};
-
 export function WalletAccount({ onNavigate }: WalletAccountProps) {
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
-  const [wallet, setWallet] = useState(accountInfo);
+  const [thresholds, setThresholds] = useState({ low: 1, medium: 1, high: 1 });
+  const [wallet, setWallet] = useState({
+    publicKey: "",
+    balance: "0.00",
+    asset: "XLM",
+    network: "Stellar Testnet",
+    created: ""
+  });
   const [signers, setSigners] = useState<Signer[]>([]);
+  const [isOwner, setIsOwner] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
-    const loadWallet = async () => {
-      try {
-        const info = await authService.getWalletInfo();
-        const native = info.balances.find((b) => b.asset_type === 'native');
-        setWallet({
-          publicKey: info.publicKey,
-          balance: native ? Number(native.balance).toLocaleString() : "0.00",
-          asset: "XLM",
-          network: "Stellar Testnet",
-          created: "",
-        });
-      } catch (err) {
-        console.error('Failed to load wallet info', err);
-      }
-    };
-
-    loadWallet();
-  }, []);
-
-  useEffect(() => {
-    const loadSigners = async () => {
+    const loadData = async () => {
       let accountId = user?.accountId;
       try {
         if (!accountId) {
@@ -78,23 +53,53 @@ export function WalletAccount({ onNavigate }: WalletAccountProps) {
           accountId = accounts?.[0]?.id;
         }
 
-        if (!accountId) return;
+        if (accountId) {
+          const [info, account, members] = await Promise.all([
+            accountService.getAccountWalletInfo(accountId),
+            accountService.getAccount(accountId),
+            accountService.getMembers(accountId)
+          ]);
 
-        const members = await accountService.getMembers(accountId);
-        const mapped = (members || []).map((s) => ({
-          address: s.publicKey,
-          name: s.name,
-          weight: s.weight,
-          status: "active" as const,
-          addedDate: undefined,
-        }));
-        setSigners(mapped);
+          const native = info.balances.find((b) => b.asset_type === 'native');
+          setWallet({
+            publicKey: info.publicKey,
+            balance: native ? Number(native.balance).toLocaleString() : "0.00",
+            asset: "XLM",
+            network: 'Test Network',
+            created: new Date(account.createdAt).toLocaleDateString(),
+          });
+
+          setIsOwner(account.owner.id === user?.id);
+          setThresholds({
+            low: 1,
+            medium: account.threshold,
+            high: account.threshold
+          });
+
+          const mapped = (members || []).map((s) => ({
+            address: s.publicKey,
+            name: s.name,
+            weight: s.weight,
+            status: "active" as const,
+            addedDate: undefined,
+          }));
+          setSigners(mapped);
+        } else {
+          // No account assigned yet, show base wallet if connected
+          const info = await authService.getWalletInfo();
+          const native = info.balances.find((b) => b.asset_type === 'native');
+          setWallet(prev => ({
+            ...prev,
+            publicKey: info.publicKey,
+            balance: native ? Number(native.balance).toLocaleString() : "0.00",
+          }));
+        }
       } catch (err) {
-        console.error('Failed to load signers', err);
+        console.error('Failed to load wallet/signer info', err);
       }
     };
 
-    loadSigners();
+    loadData();
   }, [user?.accountId]);
 
   const handleCopy = () => {
@@ -115,74 +120,95 @@ export function WalletAccount({ onNavigate }: WalletAccountProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" onClick={() => onNavigate("dashboard")}>
-          <ArrowLeft className="w-5 h-5" />
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => onNavigate("dashboard")}
+          className="rounded-full hover:bg-white/5 border border-white/5"
+        >
+          <ArrowLeft className="w-5 h-5 text-primary" />
         </Button>
         <div>
-          <h1 className="text-3xl">Wallet Account</h1>
-          <p className="text-muted-foreground">View your wallet details and settings</p>
+          <h1 className="text-4xl font-bold tracking-tight">Wallet <span className="text-primary">Details</span></h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60 mt-1">Multi-sig account information</p>
         </div>
       </div>
 
       {/* Account Overview */}
-      <Card className="border-0 bg-gradient-to-br from-blue-600 via-cyan-500 to-purple-600 text-white">
+      <Card className="relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-[80px] -mr-24 -mt-24"></div>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div>
-              <CardDescription className="text-blue-100">Account Balance</CardDescription>
-              <CardTitle className="text-4xl mt-2">{wallet.balance} {wallet.asset}</CardTitle>
+            <div className="space-y-1 text-left">
+              <CardDescription>WALLET BALANCE</CardDescription>
+              <CardTitle className="text-5xl font-bold tracking-tighter text-primary">{wallet.balance} {wallet.asset}</CardTitle>
             </div>
-            <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <Wallet className="w-8 h-8" />
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-lg">
+              <Wallet className="w-8 h-8 text-primary" />
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between text-sm text-blue-100">
-            <span>Network</span>
-            <span className="font-medium text-white">{wallet.network}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm text-blue-100">
-            <span>Created</span>
-            <span className="font-medium text-white">{wallet.created || "-"}</span>
+        <CardContent className="pt-4 border-t border-white/5">
+          <div className="grid grid-cols-2 gap-8 text-left">
+            <div className="space-y-1">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-60">Network</div>
+              <div className="font-bold tracking-tight">{wallet.network}</div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-60">Created On</div>
+              <div className="font-bold tracking-tight">{wallet.created || "INITIATING..."}</div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Public Key & QR Code */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 relative overflow-hidden">
           <CardHeader>
-            <CardTitle>Public Address</CardTitle>
-            <CardDescription>Your Stellar wallet address</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-4 rounded-lg bg-muted border font-mono text-sm break-all">
-              {wallet.publicKey || "-"}
+            <div className="flex items-center space-x-3">
+              <div className="p-2 rounded-lg bg-cyan-500/10">
+                <Shield className="w-5 h-5 text-cyan-500" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Wallet Address</CardTitle>
+                <CardDescription>Your public address on the Stellar network</CardDescription>
+              </div>
             </div>
-            <div className="flex space-x-3">
-              <Button onClick={handleCopy} className="flex-1">
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="p-5 rounded-2xl bg-[#0D0D11] border border-white/10 font-mono text-xs sm:text-sm break-all group relative overflow-hidden transition-all hover:border-primary/30">
+              <div className="absolute inset-x-0 bottom-0 h-0.5 bg-primary/20 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+              <span className="relative z-10 text-primary/90 leading-relaxed tracking-tight">{wallet.publicKey || "NOT CONNECTED"}</span>
+            </div>
+            <div className="flex flex-wrap gap-4">
+              <Button onClick={handleCopy} className="flex-1 min-w-full sm:min-w-[160px] shadow-lg">
                 {copied ? (
                   <>
                     <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Copied!
+                    COPIED
                   </>
                 ) : (
                   <>
                     <Copy className="w-4 h-4 mr-2" />
-                    Copy Address
+                    <span>COPY ADDRESS</span>
                   </>
                 )}
               </Button>
-              <Button variant="outline" onClick={() => setShowQR(!showQR)}>
+              <Button variant="outline" onClick={() => setShowQR(!showQR)} className="flex-1 min-w-[calc(50%-8px)] sm:min-w-[120px] bg-white/5 border-white/10">
                 <QrCode className="w-4 h-4 mr-2" />
-                {showQR ? "Hide" : "Show"} QR
+                <span>{showQR ? "HIDE" : "SHOW"} QR</span>
               </Button>
-              <Button variant="outline">
-                <ExternalLink className="w-4 h-4" />
+              <Button
+                variant="outline"
+                onClick={() => window.open(`https://stellar.expert/explorer/testnet/account/${wallet.publicKey}`, '_blank')}
+                className="flex-1 min-w-[calc(50%-8px)] sm:min-w-[120px] bg-white/5 border-white/10"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                EXPLORER
               </Button>
             </div>
           </CardContent>
@@ -201,16 +227,15 @@ export function WalletAccount({ onNavigate }: WalletAccountProps) {
                   {Array.from({ length: 64 }).map((_, i) => (
                     <div
                       key={i}
-                      className={`w-2 h-2 ${
-                        Math.random() > 0.5 ? "bg-foreground" : "bg-background"
-                      }`}
+                      className={`w-2 h-2 ${Math.random() > 0.5 ? "bg-foreground" : "bg-background"
+                        }`}
                     ></div>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="aspect-square bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
-                <QrCode className="w-16 h-16 text-muted-foreground" />
+              <div className="aspect-square bg-secondary/50 rounded-2xl flex items-center justify-center border border-white/5">
+                <QrCode className="w-16 h-16 text-primary/50" />
               </div>
             )}
           </CardContent>
@@ -222,40 +247,40 @@ export function WalletAccount({ onNavigate }: WalletAccountProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Multi-Signature Configuration</CardTitle>
-              <CardDescription>Current threshold and signer settings</CardDescription>
+              <div className="flex items-center gap-2 mb-1">
+                <CardTitle>Multi-Signature Setup</CardTitle>
+                {!isOwner && <Badge variant="outline">View Only</Badge>}
+              </div>
+              <CardDescription>Current approval requirements and signer settings</CardDescription>
             </div>
-            <Button variant="outline" onClick={() => onNavigate("settings")}>
-              Manage
-            </Button>
+            {isOwner && (
+              <Button variant="outline" onClick={() => onNavigate("settings")}>
+                Manage
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Thresholds */}
-          <div>
-            <h4 className="mb-4">Signature Thresholds</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 rounded-lg border bg-muted/50">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">Low Security</span>
-                  <Badge variant="outline">Transactions &lt; 100 XLM</Badge>
+          {/* Thresholds */}
+          <div className="space-y-6 pt-2">
+            <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60">Approval Thresholds</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { label: 'Low Threshold', desc: 'Basic Tasks', value: thresholds.low },
+                { label: 'Medium Threshold', desc: 'Standard Transfers', value: thresholds.medium },
+                { label: 'High Threshold', desc: 'Secure Changes', value: thresholds.high },
+              ].map((tier) => (
+                <div key={tier.label} className="p-6 rounded-2xl border border-white/5 bg-white/5 hover:border-primary/20 transition-all group">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-50">{tier.label}</span>
+                    <Badge variant="outline" className="text-[10px] uppercase tracking-widest border-primary/20 text-primary">{tier.desc}</Badge>
+                  </div>
+                  <div className="text-3xl font-bold tracking-tighter">
+                    {tier.value} <span className="text-sm font-medium text-muted-foreground opacity-40 uppercase">OF {signers.length} SIGNERS</span>
+                  </div>
                 </div>
-                <div className="text-2xl font-medium">{thresholds.low} of {signers.length}</div>
-              </div>
-              <div className="p-4 rounded-lg border bg-blue-50 border-blue-200">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">Medium Security</span>
-                  <Badge variant="outline" className="bg-white">Standard Operations</Badge>
-                </div>
-                <div className="text-2xl font-medium text-blue-600">{thresholds.medium} of {signers.length}</div>
-              </div>
-              <div className="p-4 rounded-lg border bg-purple-50 border-purple-200">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">High Security</span>
-                  <Badge variant="outline" className="bg-white">Account Changes</Badge>
-                </div>
-                <div className="text-2xl font-medium text-purple-600">{thresholds.high} of {signers.length}</div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -263,30 +288,32 @@ export function WalletAccount({ onNavigate }: WalletAccountProps) {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h4>Authorized Signers ({signers.length})</h4>
-              <Button variant="outline" size="sm" onClick={() => onNavigate("settings")}>
-                Add Signer
-              </Button>
+              {isOwner && (
+                <Button variant="outline" size="sm" onClick={() => onNavigate("settings")}>
+                  Add Signer
+                </Button>
+              )}
             </div>
             <div className="space-y-3">
               {signers.map((signer, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
+                <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-white/5 bg-secondary/10 hover:bg-secondary/20 transition-all duration-300 gap-4 group">
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
+                    <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white flex-shrink-0 shadow-[0_0_15px_rgba(99,102,241,0.3)] group-hover:scale-110 transition-transform">
                       <User className="w-6 h-6" />
                     </div>
-                    <div>
-                      <div className="font-medium flex items-center space-x-2">
+                    <div className="min-w-0">
+                      <div className="font-bold flex items-center space-x-2 truncate text-base">
                         <span>{signer.name}</span>
                         {signer.status === "active" && (
-                          <CheckCircle2 className="w-4 h-4 text-green-600" />
+                          <div className="w-2 h-2 rounded-full bg-status-success shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
                         )}
                       </div>
                       <div className="text-sm text-muted-foreground font-mono flex items-center space-x-2">
-                        <span>{formatPublicKey(signer.address)}</span>
+                        <span className="truncate opacity-70">{formatPublicKey(signer.address)}</span>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6"
+                          className="h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() => handleCopyAddress(signer.address)}
                           aria-label="Copy signer address"
                           title="Copy address"
@@ -294,21 +321,18 @@ export function WalletAccount({ onNavigate }: WalletAccountProps) {
                           <Copy className="w-3 h-3" />
                         </Button>
                       </div>
-                      <div className="text-xs text-muted-foreground mt-1">Added {signer.addedDate}</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <Badge variant="outline" className="mb-2">
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 border-t border-white/5 sm:border-t-0 pt-3 sm:pt-0">
+                    <Badge variant="outline" className="sm:mb-2 whitespace-nowrap bg-primary/5 border-primary/20">
                       Weight: {signer.weight}
                     </Badge>
-                    <div className="text-xs text-muted-foreground">
-                      <Badge 
-                        variant={signer.status === "active" ? "default" : "secondary"}
-                        className={signer.status === "active" ? "bg-green-100 text-green-700" : ""}
-                      >
-                        {signer.status}
-                      </Badge>
-                    </div>
+                    <Badge
+                      variant={signer.status === "active" ? "default" : "secondary"}
+                      className="capitalize px-3"
+                    >
+                      {signer.status}
+                    </Badge>
                   </div>
                 </div>
               ))}
@@ -316,26 +340,46 @@ export function WalletAccount({ onNavigate }: WalletAccountProps) {
           </div>
 
           {/* Visual Multi-Sig Diagram */}
-          <div className="p-6 rounded-lg border bg-gradient-to-br from-blue-50 to-purple-50">
-            <h4 className="mb-4 text-center">Multi-Signature Approval Flow</h4>
-            <div className="flex items-center justify-center space-x-4">
+          <div className="p-8 rounded-3xl border border-white/5 bg-[#0D0D11]/50 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-primary/2 blur-[100px] rounded-full pointer-events-none"></div>
+            <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60 text-center mb-10">Signer Network</h4>
+
+            <div className="flex flex-wrap items-center justify-center gap-8 relative z-10">
               {signers.map((signer, idx) => (
                 <div key={idx} className="flex items-center">
-                  <div className="text-center">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg mb-2 mx-auto">
-                      <Shield className="w-8 h-8" />
+                  <div className="text-center group/node">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-primary/40 blur-xl rounded-full opacity-0 group-hover/node:opacity-30 transition-opacity"></div>
+                      <div className="w-20 h-20 rounded-2xl bg-[#1D1D26] flex items-center justify-center text-primary mb-4 mx-auto border border-white/10 shadow-2xl relative z-10 transition-transform duration-500 group-hover/node:scale-110 group-hover/node:bg-[#252530]">
+                        <Shield className="w-10 h-10" />
+                      </div>
                     </div>
-                    <div className="text-xs font-medium">{signer.name.split(" ")[0]}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-primary opacity-60 transition-opacity group-hover/node:opacity-100">{signer.name.split(" ")[0]}</div>
+                    <div className="text-[8px] font-mono text-muted-foreground opacity-40 mt-1 uppercase">Weight: {signer.weight}</div>
                   </div>
                   {idx < signers.length - 1 && (
-                    <div className="w-12 h-0.5 bg-gradient-to-r from-blue-500 to-purple-600 mx-2"></div>
+                    <div className="hidden sm:block w-16 h-px bg-gradient-to-r from-primary/40 via-primary/10 to-transparent mx-2 opacity-50 relative">
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary/20 border border-primary/40 animate-pulse"></div>
+                    </div>
                   )}
                 </div>
               ))}
+
+              {/* The Target */}
+              <div className="flex items-center">
+                <div className="hidden sm:block w-16 h-px bg-gradient-to-l from-status-success/40 via-status-success/10 to-transparent mx-2 opacity-50"></div>
+                <div className="text-center">
+                  <div className="w-20 h-20 rounded-full bg-status-success/10 flex items-center justify-center text-status-success mx-auto border border-status-success/20 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+                    <CheckCircle2 className="w-10 h-10" />
+                  </div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-status-success mt-4">SUCCESS</div>
+                </div>
+              </div>
             </div>
-            <div className="text-center mt-4 text-sm text-muted-foreground">
-              Requires {thresholds.medium} signatures for standard transactions
-            </div>
+
+            <p className="text-center mt-12 text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-40 max-w-sm mx-auto leading-relaxed text-left">
+              Transactions require at least <span className="text-primary">{thresholds.medium} signatures</span> from the members above.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -343,26 +387,40 @@ export function WalletAccount({ onNavigate }: WalletAccountProps) {
       {/* Account Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Account Actions</CardTitle>
-          <CardDescription>Manage your wallet settings and security</CardDescription>
+          <div className="flex items-center space-x-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <User className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-xl">Wallet Actions</CardTitle>
+              <CardDescription>Manage your wallet settings and data</CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Button variant="outline" className="justify-start" onClick={() => onNavigate("settings")}>
-              <Shield className="w-4 h-4 mr-2" />
-              Security Settings
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button variant="outline" className="h-20 flex-col gap-2 bg-white/5 border-white/10 hover:border-primary/50" onClick={() => onNavigate("settings")}>
+              <Shield className="w-5 h-5" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Security</span>
             </Button>
-            <Button variant="outline" className="justify-start" onClick={() => onNavigate("history")}>
-              <ExternalLink className="w-4 h-4 mr-2" />
-              View on Explorer
+            <Button
+              variant="outline"
+              className="h-20 flex-col gap-2 bg-white/5 border-white/10 hover:border-primary/50"
+              onClick={() => window.open(`https://stellar.expert/explorer/testnet/account/${wallet.publicKey}`, '_blank')}
+            >
+              <ExternalLink className="w-5 h-5" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Explore</span>
             </Button>
-            <Button variant="outline" className="justify-start">
-              <Copy className="w-4 h-4 mr-2" />
-              Export Private Key
+            <Button variant="outline" className="h-20 flex-col gap-2 bg-white/5 border-white/10 hover:border-primary/50">
+              <Copy className="w-5 h-5" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Export</span>
             </Button>
-            <Button variant="outline" className="justify-start text-red-600 border-red-200 hover:bg-red-50">
-              Disconnect Wallet
-            </Button>
+            {isOwner && (
+              <Button variant="outline" className="h-20 flex-col gap-2 bg-white/5 border-status-error/20 text-status-error hover:bg-status-error/10 hover:border-status-error/50">
+                <Trash2 className="w-5 h-5" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Delete</span>
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

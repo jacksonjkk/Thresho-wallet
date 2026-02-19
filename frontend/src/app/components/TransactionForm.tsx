@@ -6,47 +6,132 @@ import { Textarea } from "@/app/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select";
 import { ArrowLeft, Send, Info, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/app/components/ui/alert";
+import { transactionService } from "@/services/transaction.service";
+import { freighterService } from "@/services/freighter.service";
+import { accountService, Account } from "@/services/account.service";
+import { useAuth } from "@/app/context/AuthContext";
+import { useEffect } from "react";
 
 interface TransactionFormProps {
   onNavigate: (page: string) => void;
 }
 
 export function TransactionForm({ onNavigate }: TransactionFormProps) {
+  const { user } = useAuth();
   const [asset, setAsset] = useState("XLM");
   const [amount, setAmount] = useState("");
   const [recipient, setRecipient] = useState("");
   const [memo, setMemo] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [account, setAccount] = useState<Account | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [balance, setBalance] = useState("0.00");
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (user?.accountId) {
+        try {
+          const [acc, info] = await Promise.all([
+            accountService.getAccount(user.accountId),
+            accountService.getAccountWalletInfo(user.accountId)
+          ]);
+          setAccount(acc);
+          const native = info.balances.find((b) => b.asset_type === 'native');
+          setBalance(native ? native.balance : "0.00");
+        } catch (err) {
+          console.error("Failed to load account data in form", err);
+        }
+      }
+    };
+    loadData();
+  }, [user?.accountId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => {
+    setError("");
+
+    if (!user?.accountId || !user.publicKey) {
+      setError("Missing account or wallet connection");
+      return;
+    }
+
+    if (asset !== "XLM") {
+      setError("Only XLM is supported for now");
+      return;
+    }
+
+    let createdTxId: string | null = null;
+    try {
+      setLoading(true);
+      const created = await transactionService.createTransaction({
+        accountId: user.accountId,
+        to: recipient,
+        amount,
+        memo: memo || undefined,
+      });
+      createdTxId = created.transactionId;
+
+      const signedXdr = await freighterService.signChallenge(
+        created.xdr,
+        created.networkPassphrase
+      );
+
+      await transactionService.signTransaction(created.transactionId, {
+        signedXdr, // correct property name for backend
+        signerPublicKey: user.publicKey,
+      });
+
+      setSubmitted(true);
+      // Set navigation state to trigger toast on Pending page
+      if (window.history && window.history.replaceState) {
+        const newState = { ...window.history.state, showSuccessToast: true };
+        window.history.replaceState(newState, '', window.location.pathname);
+      }
       onNavigate("pending");
-    }, 2000);
+    } catch (err: any) {
+      setError(err.message || "Failed to create transaction");
+      // Cleanup: if we created a record but failed to sign/submit, delete it
+      if (createdTxId) {
+        transactionService.deleteTransaction(createdTxId).catch(console.error);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (submitted) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <Card className="border-0 shadow-xl">
-          <CardContent className="pt-12 pb-12 text-center">
-            <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                <CheckCircle2 className="w-10 h-10 text-white" />
+      <div className="max-w-xl mx-auto py-12">
+        <Card className="border-0 shadow-2xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-status-success/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-status-success/10 transition-colors"></div>
+          <CardContent className="pt-16 pb-12 text-center space-y-8">
+            <div className="flex justify-center">
+              <div className="relative">
+                <div className="absolute inset-0 bg-status-success/40 blur-2xl rounded-full opacity-40"></div>
+                <div className="w-24 h-24 rounded-2xl bg-[#1D1D26] border border-status-success/20 flex items-center justify-center relative z-10 shadow-2xl">
+                  <CheckCircle2 className="w-12 h-12 text-status-success" />
+                </div>
               </div>
             </div>
-            <h2 className="text-2xl mb-2">Transaction Submitted!</h2>
-            <p className="text-muted-foreground mb-6">
-              Your transaction has been created and is pending approvals.
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold tracking-tight">TRANSACTION <span className="text-status-success">CREATED</span></h2>
+              <p className="text-muted-foreground font-medium uppercase tracking-widest text-[10px] opacity-60">Waiting for others to sign</p>
+            </div>
+
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+              Your transaction has been created and is now waiting for other members to approve and sign it.
             </p>
-            <div className="flex justify-center space-x-3">
-              <Button onClick={() => onNavigate("pending")} className="bg-gradient-to-r from-blue-600 to-purple-600">
-                View Pending Transactions
+
+            <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+              <Button onClick={() => onNavigate("pending")} className="w-full sm:w-auto sm:min-w-[200px] shadow-lg">
+                VIEW PENDING
               </Button>
-              <Button variant="outline" onClick={() => onNavigate("dashboard")}>
-                Back to Dashboard
+              <Button variant="outline" onClick={() => onNavigate("dashboard")} className="w-full sm:w-auto sm:min-w-[200px] border-white/5 bg-white/5">
+                GO TO DASHBOARD
               </Button>
             </div>
           </CardContent>
@@ -57,26 +142,29 @@ export function TransactionForm({ onNavigate }: TransactionFormProps) {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      {/* Header */}
       <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" onClick={() => onNavigate("dashboard")}>
-          <ArrowLeft className="w-5 h-5" />
+        <Button variant="ghost" size="icon" onClick={() => onNavigate("dashboard")} className="rounded-full hover:bg-white/5 border border-white/5">
+          <ArrowLeft className="w-5 h-5 text-primary" />
         </Button>
         <div>
-          <h1 className="text-3xl">New Transaction</h1>
-          <p className="text-muted-foreground">Create a transaction for multi-sig approval</p>
+          <h1 className="text-4xl font-bold tracking-tight">New <span className="text-primary">Transaction</span></h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60 mt-1">Create a multi-sig transaction</p>
         </div>
       </div>
 
-      {/* Info Alert */}
       <Alert className="border-blue-200 bg-blue-50">
         <Info className="w-4 h-4 text-blue-600" />
         <AlertDescription className="text-blue-900">
-          This transaction will require 2 out of 3 signatures before it can be executed on the blockchain.
+          This transaction will require {account?.threshold || 2} out of {account?.signers?.length || 3} signatures before it can be executed on the blockchain.
         </AlertDescription>
       </Alert>
 
-      {/* Transaction Form */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
       <form onSubmit={handleSubmit}>
         <Card>
           <CardHeader>
@@ -84,7 +172,6 @@ export function TransactionForm({ onNavigate }: TransactionFormProps) {
             <CardDescription>Fill in the transaction information below</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Asset Selection */}
             <div className="space-y-2">
               <Label htmlFor="asset">Asset</Label>
               <Select value={asset} onValueChange={setAsset}>
@@ -119,11 +206,10 @@ export function TransactionForm({ onNavigate }: TransactionFormProps) {
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
-                Available balance: 45,328.50 XLM
+                Available balance: {Number(balance).toLocaleString()} XLM
               </p>
             </div>
 
-            {/* Recipient Address */}
             <div className="space-y-2">
               <Label htmlFor="recipient">Recipient Address</Label>
               <Input
@@ -139,7 +225,6 @@ export function TransactionForm({ onNavigate }: TransactionFormProps) {
               </p>
             </div>
 
-            {/* Amount */}
             <div className="space-y-2">
               <Label htmlFor="amount">Amount</Label>
               <div className="relative">
@@ -166,14 +251,13 @@ export function TransactionForm({ onNavigate }: TransactionFormProps) {
                   variant="link"
                   size="sm"
                   className="h-auto p-0 text-blue-600"
-                  onClick={() => setAmount("45328.50")}
+                  onClick={() => setAmount(balance)}
                 >
                   Send Max
                 </Button>
               </div>
             </div>
 
-            {/* Memo (Optional) */}
             <div className="space-y-2">
               <Label htmlFor="memo">
                 Memo <span className="text-muted-foreground font-normal">(Optional)</span>
@@ -190,7 +274,6 @@ export function TransactionForm({ onNavigate }: TransactionFormProps) {
               </p>
             </div>
 
-            {/* Transaction Summary */}
             <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
               <div className="font-medium mb-2">Transaction Summary</div>
               <div className="space-y-2 text-sm">
@@ -200,7 +283,7 @@ export function TransactionForm({ onNavigate }: TransactionFormProps) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Required Signatures</span>
-                  <span>2 of 3</span>
+                  <span>{account?.threshold || 2} of {account?.signers?.length || 3}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Estimated Time</span>
@@ -214,21 +297,22 @@ export function TransactionForm({ onNavigate }: TransactionFormProps) {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex space-x-3 pt-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-4 pt-6">
               <Button
                 type="submit"
-                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                disabled={loading}
+                className="flex-1 max-w-xs shadow-lg"
               >
                 <Send className="w-4 h-4 mr-2" />
-                Submit for Approval
+                {loading ? "SENDING..." : "SEND FOR APPROVAL"}
               </Button>
               <Button
                 type="button"
                 variant="outline"
+                className="flex-1 max-w-xs border-white/5 bg-white/5"
                 onClick={() => onNavigate("dashboard")}
               >
-                Cancel
+                CANCEL
               </Button>
             </div>
           </CardContent>

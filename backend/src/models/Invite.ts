@@ -4,23 +4,23 @@ import { Account } from './Account';
 @Entity('invites')
 export class Invite {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ unique: true })
-  code: string;
+  code!: string;
 
-  @ManyToOne(() => Account)
-  account: Account;
+  @ManyToOne(() => Account, { onDelete: 'CASCADE' })
+  account!: Account;
 
   @Column({ default: 'signer' })
-  role: string;
+  role!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @Column()
-  expiresAt: Date;
+  expiresAt!: Date;
 
-  @Column({ nullable: true })
-  usedBy: string;
+  @Column('varchar', { nullable: true })
+  usedBy: string | null = null;
 }

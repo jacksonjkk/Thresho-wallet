@@ -31,6 +31,7 @@ export interface UserProfile {
   email: string;
   biometricEnabled: boolean;
   createdAt: string;
+  hasCompletedOnboarding: boolean;
   avatarUrl?: string | null;
   stellarPublicKey?: string | null;
 }
@@ -90,7 +91,7 @@ export const authService = {
     return apiClient.get<WalletInfo>('/auth/wallet');
   },
 
-  async updateProfile(data: { firstName?: string; lastName?: string; avatarUrl?: string | null }): Promise<UserProfile> {
+  async updateProfile(data: { firstName?: string; lastName?: string; avatarUrl?: string | null; stellarPublicKey?: string }): Promise<UserProfile> {
     return apiClient.put<UserProfile>('/auth/me', data);
   },
 
@@ -98,7 +99,12 @@ export const authService = {
     return apiClient.post<{ message: string }>('/auth/complete-onboarding');
   },
 
-  logout() {
+  async logout(): Promise<{ message: string }> {
     apiClient.setToken(null);
+    return apiClient.post<{ message: string }>('/auth/logout');
+  },
+
+  async deleteAccount(): Promise<{ message: string }> {
+    return apiClient.delete<{ message: string }>('/auth/me');
   },
 };
