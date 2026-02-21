@@ -15,6 +15,13 @@ interface AccountSetupPageProps {
 
 export function AccountSetupPage({ onComplete }: AccountSetupPageProps) {
   const { user, isLoading, completeOnboarding, saveAccountData, refreshAccountData } = useAuth();
+  // Debug: log token and user state
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log('[AccountSetupPage] user:', user);
+    // eslint-disable-next-line no-console
+    console.log('[AccountSetupPage] token:', localStorage.getItem('token'));
+  }, [user]);
   const [activeTab, setActiveTab] = useState("create");
   const [accountName, setAccountName] = useState("");
   const [threshold, setThreshold] = useState("2");
@@ -32,6 +39,9 @@ export function AccountSetupPage({ onComplete }: AccountSetupPageProps) {
   }, []);
 
   const handleCreateAccount = async () => {
+    // Debug: log before API call
+    // eslint-disable-next-line no-console
+    console.log('[AccountSetupPage] handleCreateAccount: token:', localStorage.getItem('token'));
     setError("");
 
     if (!accountName.trim()) {
@@ -70,6 +80,9 @@ export function AccountSetupPage({ onComplete }: AccountSetupPageProps) {
   };
 
   const handleJoinAccount = async () => {
+    // Debug: log before API call
+    // eslint-disable-next-line no-console
+    console.log('[AccountSetupPage] handleJoinAccount: token:', localStorage.getItem('token'));
     setError("");
 
     if (!invitationCode.trim()) {

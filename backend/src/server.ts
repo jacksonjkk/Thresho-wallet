@@ -13,6 +13,9 @@ import marketRoutes from './routes/market.routes';
 dotenv.config();
 
 const app = express();
+
+// Trust proxy for correct client IP and secure cookies in production (Render)
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 
 // Middleware
