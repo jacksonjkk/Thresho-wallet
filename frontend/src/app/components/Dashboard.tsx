@@ -174,18 +174,18 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-4xl font-bold tracking-tight">Account <span className="text-primary">Dashboard</span></h1>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60">Status: Account Connected</p>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+        <div className="space-y-1.5 text-left">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Account <span className="text-primary">Dashboard</span></h1>
+          <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60">Status: Network Synchronized</p>
         </div>
-        <div className="flex items-center gap-4 bg-white/5 border border-white/5 p-3 rounded-2xl backdrop-blur-sm">
-          <div className="text-right">
-            <div className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Wallet Address</div>
-            <div className="text-[10px] font-mono font-bold tracking-tight text-primary/80">{user?.publicKey ? `${user.publicKey.slice(0, 6)}...${user.publicKey.slice(-4)}` : "DISCONNECTED"}</div>
+        <div className="flex items-center justify-between sm:justify-end gap-4 bg-white/5 border border-white/5 p-2 sm:p-3 rounded-2xl backdrop-blur-sm">
+          <div className="text-left sm:text-right px-2 sm:px-0">
+            <div className="text-[7px] sm:text-[8px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">Active Wallet</div>
+            <div className="text-[9px] sm:text-[10px] font-mono font-bold tracking-tight text-primary/80">{user?.publicKey ? `${user.publicKey.slice(0, 6)}...${user.publicKey.slice(-4)}` : "DISCONNECTED"}</div>
           </div>
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-            <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.8)]"></div>
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.8)]"></div>
           </div>
         </div>
       </div>
@@ -215,10 +215,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
             <Button
               onClick={() => onNavigate("transaction-form")}
-              className="h-14 text-sm font-bold uppercase tracking-widest shadow-lg"
+              className="h-12 sm:h-14 text-xs sm:text-sm font-bold uppercase tracking-widest shadow-lg w-full"
               size="lg"
             >
               <Send className="w-4 h-4 mr-2 shrink-0" />
@@ -227,16 +227,16 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <Button
               onClick={() => onNavigate("wallet")}
               variant="outline"
-              className="h-14 text-sm font-bold uppercase tracking-widest bg-white/5 border-white/5 hover:bg-white/10"
+              className="h-12 sm:h-14 text-xs sm:text-sm font-bold uppercase tracking-widest bg-white/5 border-white/5 hover:bg-white/10 w-full"
               size="lg"
             >
               <Download className="w-4 h-4 mr-2 shrink-0 text-primary" />
-              RECEIVE ASSETS
+              RECEIVE
             </Button>
             <Button
               onClick={() => onNavigate("pending")}
               variant="outline"
-              className="h-14 text-sm font-bold uppercase tracking-widest bg-white/5 border-white/5 hover:bg-white/10"
+              className="h-12 sm:h-14 text-xs sm:text-sm font-bold uppercase tracking-widest bg-white/5 border-white/5 hover:bg-white/10 w-full"
               size="lg"
             >
               <Shield className="w-4 h-4 mr-2 shrink-0 text-primary" />
@@ -316,12 +316,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       {pendingApprovals.length > 0 && (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <CardTitle>Pending Approvals</CardTitle>
                 <CardDescription>Transactions awaiting your signature</CardDescription>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => onNavigate("pending")}>
+              <Button variant="ghost" size="sm" onClick={() => onNavigate("pending")} className="w-fit">
                 View All
               </Button>
             </div>
@@ -375,9 +375,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       {/* Recent Transactions */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-lg bg-primary/10">
+              <div className="p-2 rounded-lg bg-primary/10 shrink-0">
                 <TrendingUp className="w-4 h-4 text-primary" />
               </div>
               <div>
@@ -388,7 +388,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <Button
               variant="outline"
               size="sm"
-              className="text-[10px] font-bold uppercase tracking-widest bg-white/5 border-white/5 rounded-lg h-8"
+              className="text-[10px] font-bold uppercase tracking-widest bg-white/5 border-white/5 rounded-lg h-8 w-fit shrink-0"
               onClick={() => onNavigate("history")}
             >
               VIEW FULL HISTORY

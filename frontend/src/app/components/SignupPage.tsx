@@ -2,10 +2,12 @@ import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
-import { Eye, EyeOff, Network } from "lucide-react";
+import { Eye, EyeOff, Network, Mail, Twitter, Shield, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { authService } from "@/services/auth.service";
+import { motion } from "motion/react";
+import { toast } from "sonner";
 
 interface SignupPageProps {
   onLoginClick?: () => void;
@@ -29,49 +31,25 @@ export function SignupPage({ onLoginClick }: SignupPageProps) {
     setError("");
     setSuccess(false);
 
-    // Validation
-    if (!firstName || !lastName || !email || !password) {
-      setError("All fields are required");
-      return;
-    }
-
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
+      setError("Passwords don't match");
       return;
     }
 
     setLoading(true);
-
-    // Check if email already exists before signing up
     try {
       const emailCheck = await authService.checkEmailExists(email);
       if (emailCheck.exists) {
-        setError("This email is already registered. Please login or use a different email.");
+        setError("This email is already in use");
         setLoading(false);
         return;
       }
-    } catch (err) {
-      setError("Unable to verify email. Please try again.");
-      setLoading(false);
-      return;
-    }
 
-    try {
-      // Create account immediately
       await authService.register(firstName, lastName, email, password);
       setSuccess(true);
-      setFirstName("");
-      setLastName("");
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
+      toast.success("Account created successfully!");
 
-      // Redirect to login after 2 seconds
+      // Redirect after success
       setTimeout(() => {
         if (onLoginClick) onLoginClick();
       }, 2000);
@@ -85,122 +63,128 @@ export function SignupPage({ onLoginClick }: SignupPageProps) {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-background relative overflow-hidden">
       {/* Background Ambience */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -mr-64 -mt-64"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[120px] -ml-64 -mb-64"></div>
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -mr-32 -mt-32"></div>
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none -ml-32 -mb-32"></div>
 
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-16 items-center relative z-10">
-        {/* Left Side - Illustration */}
-        <div className="hidden lg:flex flex-col space-y-12">
+        {/* Left Side - Editorial Content */}
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          className="hidden lg:flex flex-col space-y-12"
+        >
           <div className="space-y-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.8)]"></div>
+            <div className="flex items-center space-x-4">
+              <div className="bg-primary/10 p-2.5 rounded-xl border border-primary/20">
+                <Shield className="w-5 h-5 text-primary" />
+              </div>
               <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/80">Secure Multi-sig Network</span>
             </div>
-            <h1 className="text-7xl font-bold tracking-tighter leading-[0.9] text-white">
-              Securing your <span className="text-primary italic">digital</span> assets.
+            <h1 className="text-7xl font-bold tracking-tighter leading-[0.85] text-white" style={{ fontFamily: 'var(--font-serif)' }}>
+              Securing your <br />
+              <span className="text-primary italic">digital assets.</span>
             </h1>
-            <p className="text-lg text-muted-foreground/60 max-w-md font-medium tracking-tight">
-              A better way to manage team funds. Enterprise-grade security meets human-centric design.
+            <p className="text-lg text-muted-foreground/60 max-w-md font-medium tracking-tight leading-relaxed">
+              Precision infrastructure for shared wealth. Join the collaborative era of sovereign custody.
             </p>
-          </div>under
+          </div>
 
-          <div className="grid grid-cols-2 gap-8 pt-8">
+          <div className="grid grid-cols-2 gap-8 pt-4">
             <div className="p-6 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-sm group hover:border-primary/20 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Network className="w-5 h-5 text-primary" />
-              </div>
-              <h3 className="text-sm font-bold uppercase tracking-widest text-white mb-2">Multi-sig Wallet</h3>
-              <p className="text-xs text-muted-foreground opacity-60 leading-relaxed font-medium">Shared control and high security for your funds.</p>
+              <Network className="w-5 h-5 text-primary mb-4 opacity-60 group-hover:opacity-100 transition-opacity" />
+              <h3 className="text-sm font-bold uppercase tracking-widest text-white mb-2">Team Wallet</h3>
+              <p className="text-xs text-muted-foreground opacity-60 leading-relaxed font-medium">Shared control and high security for your team funds.</p>
             </div>
             <div className="p-6 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-sm group hover:border-primary/20 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Eye className="w-5 h-5 text-primary" />
-              </div>
-              <h3 className="text-sm font-bold uppercase tracking-widest text-white mb-2">Read-only Access</h3>
-              <p className="text-xs text-muted-foreground opacity-60 leading-relaxed font-medium">Track every transaction and activity as it happens.</p>
+              <ArrowRight className="w-5 h-5 text-primary mb-4 opacity-60 group-hover:opacity-100 transition-opacity" />
+              <h3 className="text-sm font-bold uppercase tracking-widest text-white mb-2">Safe Access</h3>
+              <p className="text-xs text-muted-foreground opacity-60 leading-relaxed font-medium">Track every activity with full transparency and safety.</p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Right Side - Signup Form */}
-        <div className="flex items-center justify-center">
-          <Card className="w-full max-w-md border border-white/5 bg-white/5 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 transition-colors group-hover:bg-primary/10"></div>
-            <CardHeader className="space-y-1 relative z-10 pt-8 pb-4">
-              <div className="flex items-center justify-center mb-6 lg:hidden">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex items-center justify-center"
+        >
+          <Card className="w-full max-w-md border border-white/5 bg-white/5 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50"></div>
+
+            <CardHeader className="space-y-4 pt-10 pb-6">
+              <div className="flex items-center justify-center mb-2 lg:hidden">
                 <div className="relative group/logo">
-                  <div className="absolute inset-0 bg-primary/40 blur-xl rounded-full opacity-40"></div>
+                  <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full scale-150"></div>
                   <img src="/logo.png" alt="Thresho" className="w-16 h-16 relative z-10" />
                 </div>
               </div>
-              <CardTitle className="text-3xl font-bold tracking-tighter text-center uppercase">Create Account</CardTitle>
-              <CardDescription className="text-center text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60">
-                Join our secure network
-              </CardDescription>
+              <div className="space-y-1.5 text-center">
+                <CardTitle className="text-3xl font-bold tracking-tight">Create Account</CardTitle>
+                <CardDescription className="text-xs uppercase font-bold tracking-[0.2em] text-muted-foreground opacity-60">
+                  Join our secure network
+                </CardDescription>
+              </div>
             </CardHeader>
-            <CardContent className="relative z-10">
-              <form onSubmit={handleSubmit} className="space-y-6">
+
+            <CardContent className="px-6 sm:px-10 pb-10">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-70">First Name</Label>
+                    <Label className="text-[10px] uppercase tracking-widest opacity-70">First Name</Label>
                     <Input
-                      id="firstName"
-                      type="text"
                       placeholder="JOHN"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      disabled={isLoading || success}
-                      className="h-12 bg-white/5 border-white/5 hover:border-white/10 focus:border-primary/50 transition-all rounded-xl text-xs font-medium"
+                      disabled={loading || success}
+                      className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-70">Last Name</Label>
+                    <Label className="text-[10px] uppercase tracking-widest opacity-70">Last Name</Label>
                     <Input
-                      id="lastName"
-                      type="text"
                       placeholder="DOE"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      disabled={isLoading || success}
-                      className="h-12 bg-white/5 border-white/5 hover:border-white/10 focus:border-primary/50 transition-all rounded-xl text-xs font-medium"
+                      disabled={loading || success}
+                      className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-70">Email Address</Label>
+                  <Label className="text-[10px] uppercase tracking-widest opacity-70">Email</Label>
                   <Input
-                    id="email"
                     type="email"
                     placeholder="YOUR@EMAIL.COM"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    disabled={isLoading || success}
-                    className="h-12 bg-white/5 border-white/5 hover:border-white/10 focus:border-primary/50 transition-all rounded-xl text-xs font-medium"
+                    disabled={loading || success}
+                    className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-70">Password</Label>
+                  <Label className="text-[10px] uppercase tracking-widest opacity-70">Password</Label>
                   <div className="relative">
                     <Input
-                      id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      disabled={isLoading || success}
-                      className="h-12 bg-white/5 border-white/5 hover:border-white/10 focus:border-primary/50 transition-all rounded-xl text-xs font-medium"
+                      disabled={loading || success}
+                      className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
-                      disabled={isLoading || success}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -208,23 +192,21 @@ export function SignupPage({ onLoginClick }: SignupPageProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-70">Confirm Password</Label>
+                  <Label className="text-[10px] uppercase tracking-widest opacity-70">Confirm Password</Label>
                   <div className="relative">
                     <Input
-                      id="confirm-password"
                       type={showConfirm ? "text" : "password"}
                       placeholder="••••••••"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       disabled={loading || success}
-                      className="h-12 bg-white/5 border-white/5 hover:border-white/10 focus:border-primary/50 transition-all rounded-xl text-xs font-medium"
+                      className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirm(!showConfirm)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
-                      disabled={loading || success}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                     >
                       {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -232,28 +214,40 @@ export function SignupPage({ onLoginClick }: SignupPageProps) {
                 </div>
 
                 {error && (
-                  <div className="p-4 rounded-xl border border-status-error/20 bg-status-error/5 text-[10px] uppercase font-bold tracking-widest text-status-error animate-in fade-in slide-in-from-top-2">
+                  <div className="p-3.5 rounded-lg border border-status-error/20 bg-status-error/5 text-[10px] font-bold text-status-error animate-shake">
                     {error}
                   </div>
                 )}
 
                 {success && (
-                  <div className="p-4 rounded-xl border border-status-success/20 bg-status-success/5 text-[10px] uppercase font-bold tracking-widest text-status-success animate-in fade-in zoom-in">
-                    ACCOUNT CREATED SUCCESSFULLY. REDIRECTING...
+                  <div className="p-3.5 rounded-lg border border-status-success/20 bg-status-success/5 text-[10px] font-bold text-status-success text-center">
+                    Success! Redirecting you now...
                   </div>
                 )}
 
-                <div className="flex justify-center pt-2">
-                  <Button
-                    type="submit"
-                    className="w-full max-w-xs h-14 bg-primary hover:bg-primary shadow-lg text-[11px] font-bold uppercase tracking-[0.2em]"
-                    disabled={loading || success}
-                  >
-                    {loading ? "CREATING ACCOUNT..." : "SIGN UP"}
+                <Button
+                  type="submit"
+                  className="w-full h-14 bg-primary hover:bg-primary/90 text-xs font-bold uppercase tracking-widest rounded-xl shadow-xl"
+                  disabled={loading || success}
+                >
+                  {loading ? "Creating..." : "Sign Up"}
+                </Button>
+
+                <div className="relative py-2">
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
+                  <div className="relative flex justify-center text-[8px] uppercase tracking-[0.3em] font-bold text-muted-foreground opacity-30"><span className="bg-transparent px-4 italic">Social Join</span></div>
+                </div>
+
+                <div className="flex gap-4 justify-center">
+                  <Button type="button" variant="outline" size="icon" className="rounded-full w-12 h-12 bg-white/5 hover:border-primary/50 transition-all">
+                    <Mail className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
+                  </Button>
+                  <Button type="button" variant="outline" size="icon" className="rounded-full w-12 h-12 bg-white/5 hover:border-primary/50 transition-all">
+                    <Twitter className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
                   </Button>
                 </div>
 
-                <div className="text-center pt-6">
+                <div className="text-center pt-4">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-60">
                     Already have an account?{" "}
                     <button
@@ -261,14 +255,14 @@ export function SignupPage({ onLoginClick }: SignupPageProps) {
                       onClick={onLoginClick}
                       className="text-primary hover:text-primary/80 transition-colors underline underline-offset-4"
                     >
-                      LOGIN
+                      Login
                     </button>
                   </p>
                 </div>
               </form>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

@@ -315,10 +315,7 @@ export function RulesSettings({ onNavigate }: RulesSettingsProps) {
         <>
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-2">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" onClick={() => onNavigate("dashboard")} className="rounded-full hover:bg-white/5 border border-white/5">
-                <ArrowLeft className="w-5 h-5 text-primary" />
-              </Button>
+            <div className="flex items-center">
               <div>
                 <div className="flex items-center gap-3 mb-1">
                   <h1 className="text-4xl font-bold tracking-tight">Security & <span className="text-primary">Rules</span></h1>
@@ -546,9 +543,9 @@ export function RulesSettings({ onNavigate }: RulesSettingsProps) {
           {isOwner && (
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 rounded-lg bg-purple-500/10">
+                    <div className="p-2 rounded-lg bg-purple-500/10 shrink-0">
                       <User className="w-5 h-5 text-purple-500" />
                     </div>
                     <div>
@@ -561,7 +558,7 @@ export function RulesSettings({ onNavigate }: RulesSettingsProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="rounded-lg h-9"
+                    className="rounded-lg h-9 w-full sm:w-auto"
                     onClick={() => setShowAddSigner(!showAddSigner)}
                   >
                     <Plus className="w-4 h-4 mr-2" />
@@ -595,11 +592,11 @@ export function RulesSettings({ onNavigate }: RulesSettingsProps) {
                         />
                       </div>
                     </div>
-                    <div className="flex justify-end space-x-3">
-                      <Button variant="ghost" onClick={() => setShowAddSigner(false)} className="text-muted-foreground uppercase text-xs">
+                    <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                      <Button variant="ghost" onClick={() => setShowAddSigner(false)} className="text-muted-foreground uppercase text-xs w-full sm:w-auto">
                         Abort
                       </Button>
-                      <Button onClick={handleAddSigner} className="shadow-lg">
+                      <Button onClick={handleAddSigner} className="shadow-lg w-full sm:w-auto">
                         <Plus className="w-4 h-4 mr-2" />
                         REGISTER SIGNER
                       </Button>
@@ -620,28 +617,28 @@ export function RulesSettings({ onNavigate }: RulesSettingsProps) {
                     </div>
                   ) : (
                     signers.map((signer) => (
-                      <div key={signer.id} className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 group/signer">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover/signer:bg-primary group-hover/signer:text-white transition-all duration-500">
-                            <User className="w-6 h-6" />
+                      <div key={signer.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 group/signer gap-4">
+                        <div className="flex items-center space-x-4 min-w-0">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover/signer:bg-primary group-hover/signer:text-white transition-all duration-500 shrink-0">
+                            <User className="w-5 h-5 sm:w-6 sm:h-6" />
                           </div>
-                          <div>
-                            <div className="font-bold tracking-tight text-foreground">{signer.name}</div>
-                            <div className="text-[10px] text-muted-foreground font-mono opacity-80 mt-1">
-                              {signer.publicKey}
+                          <div className="min-w-0">
+                            <div className="font-bold tracking-tight text-foreground truncate">{signer.name}</div>
+                            <div className="text-[10px] text-muted-foreground font-mono opacity-80 mt-1 truncate">
+                              {formatPublicKey(signer.publicKey)}
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-6">
-                          <div className="text-right">
+                        <div className="flex items-center justify-between sm:justify-end space-x-6 border-t border-white/5 pt-4 sm:border-0 sm:pt-0">
+                          <div className="text-left sm:text-right px-4">
                             <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest opacity-50 mb-1">Weight</div>
-                            <Badge variant="outline" className="font-mono border-white/10">{signer.weight}</Badge>
+                            <Badge variant="outline" className="font-mono border-primary/30 bg-primary/5 text-primary font-bold">{signer.weight}</Badge>
                           </div>
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleRemoveSigner(signer.id)}
-                            className="text-red-400/60 hover:text-status-error hover:bg-status-error/10 h-10 w-10"
+                            className="text-red-400/60 hover:text-status-error hover:bg-status-error/10 h-10 w-10 rounded-full"
                             disabled={signers.length <= 1}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -680,7 +677,7 @@ export function RulesSettings({ onNavigate }: RulesSettingsProps) {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex justify-center">
-                  <Button onClick={handleCreateInvite} disabled={inviteLoading} className="min-w-[240px]">
+                  <Button onClick={handleCreateInvite} disabled={inviteLoading} className="w-full sm:w-auto sm:min-w-[240px]">
                     {inviteLoading ? "GENERATING TOKEN..." : "GENERATE INVITE LINK"}
                   </Button>
                 </div>
@@ -739,12 +736,13 @@ export function RulesSettings({ onNavigate }: RulesSettingsProps) {
                       { id: 'push', label: 'Push Pulse', desc: 'Real-time websocket events', checked: notifications.push },
                       { id: 'sms', label: 'SMS Carrier', desc: 'Cellular network alerts', checked: notifications.sms },
                     ].map((channel) => (
-                      <div key={channel.id} className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all">
-                        <div>
-                          <div className="font-bold text-sm tracking-tight">{channel.label}</div>
-                          <div className="text-[10px] text-muted-foreground uppercase font-medium tracking-tight opacity-50">{channel.desc}</div>
+                      <div key={channel.id} className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all gap-4">
+                        <div className="min-w-0">
+                          <div className="font-bold text-sm tracking-tight truncate">{channel.label}</div>
+                          <div className="text-[10px] text-muted-foreground uppercase font-medium tracking-tight opacity-50 truncate">{channel.desc}</div>
                         </div>
                         <Switch
+                          className="shrink-0"
                           checked={channel.checked}
                           onCheckedChange={(checked) =>
                             setNotifications({ ...notifications, [channel.id]: checked })
@@ -799,20 +797,20 @@ export function RulesSettings({ onNavigate }: RulesSettingsProps) {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5">
-                  <div>
-                    <div className="font-bold text-sm tracking-tight">Two-Factor Authentication</div>
-                    <div className="text-[10px] text-muted-foreground uppercase font-medium tracking-tight opacity-50">Extra security layer</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 gap-4">
+                  <div className="min-w-0">
+                    <div className="font-bold text-sm tracking-tight truncate">Two-Factor Auth</div>
+                    <div className="text-[10px] text-muted-foreground uppercase font-medium tracking-tight opacity-50 truncate">Extra security layer</div>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch className="shrink-0" defaultChecked />
                 </div>
-                <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5">
-                  <div>
-                    <div className="font-bold text-sm tracking-tight">Biometric Unlock</div>
-                    <div className="text-[10px] text-muted-foreground uppercase font-medium tracking-tight opacity-50">Use fingerprint to unlock</div>
+                <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 gap-4">
+                  <div className="min-w-0">
+                    <div className="font-bold text-sm tracking-tight truncate">Biometric Unlock</div>
+                    <div className="text-[10px] text-muted-foreground uppercase font-medium tracking-tight opacity-50 truncate">Fingerprint or FaceID</div>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch className="shrink-0" defaultChecked />
                 </div>
               </div>
 

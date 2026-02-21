@@ -115,8 +115,8 @@ export default function App() {
               updateHistory(authScreen, "account");
             }}
             onSkip={() => {
-              setOnboardingStep("account");
-              updateHistory(authScreen, "account");
+              setOnboardingStep("welcome");
+              updateHistory(authScreen, "welcome");
             }}
           />
         );
@@ -161,7 +161,7 @@ export default function App() {
           onNavigate={handleNavigate}
         />
         <main className="flex-1 overflow-auto">
-          <div className="container max-w-7xl mx-auto p-6 lg:p-8">
+          <div className="container max-w-7xl mx-auto p-4 lg:p-8">
             {renderPage()}
           </div>
         </main>

@@ -61,29 +61,29 @@ export function Sidebar({ currentPage, onNavigate, pendingCount: initialPendingC
 
   const signerCount = user?.account?.signers?.length ?? 0;
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     onNavigate("login");
   };
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="p-8 border-b border-white/5">
-        <div className="flex items-center space-x-4">
+      <div className="p-6 border-b border-white/5 shrink-0">
+        <div className="flex items-center space-x-3">
           <div className="relative group">
             <div className="absolute inset-0 bg-primary/40 blur-xl rounded-full opacity-40 group-hover:opacity-60 transition-opacity"></div>
-            <img src="/logo.png" alt="Thresho Logo" className="w-12 h-12 relative z-10 transition-transform group-hover:scale-110 duration-700" />
+            <img src="/logo.png" alt="Thresho Logo" className="w-30 h-29 relative z-10 transition-transform group-hover:scale-110 duration-700" />
           </div>
           <div>
-            <h2 className="text-xl font-bold tracking-tighter leading-none">Thresho</h2>
-            <p className="text-[10px] text-primary/70 uppercase tracking-[0.2em] font-bold mt-1.5 opacity-80">Secure Multi-sig</p>
+            <h2 className="text-lg font-bold tracking-tighter leading-none">Thresho</h2>
+            <p className="text-[9px] text-primary/70 uppercase tracking-[0.2em] font-bold mt-1 opacity-80">Secure Multi-sig</p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-8 space-y-1 overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto custom-scrollbar">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
@@ -91,7 +91,7 @@ export function Sidebar({ currentPage, onNavigate, pendingCount: initialPendingC
             <Button
               key={item.id}
               variant={isActive ? "default" : "ghost"}
-              className={`w-full justify-start rounded-xl h-12 px-4 transition-all duration-300 group ${isActive
+              className={`w-full justify-start rounded-xl h-10 px-3 transition-all duration-300 group ${isActive
                 ? "shadow-lg bg-primary hover:bg-primary"
                 : "text-muted-foreground hover:text-primary hover:bg-primary/5"
                 }`}
@@ -100,12 +100,12 @@ export function Sidebar({ currentPage, onNavigate, pendingCount: initialPendingC
                 setIsMobileOpen(false);
               }}
             >
-              <Icon className={`w-4 h-4 mr-3 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-primary/60 group-hover:text-primary'}`} />
-              <span className={`flex-1 text-left text-[11px] font-bold uppercase tracking-[0.15em] ${isActive ? 'text-white' : ''}`}>{item.label}</span>
+              <Icon className={`w-3.5 h-3.5 mr-2.5 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-primary/60 group-hover:text-primary'}`} />
+              <span className={`flex-1 text-left text-[10px] font-bold uppercase tracking-[0.1em] ${isActive ? 'text-white' : ''}`}>{item.label}</span>
               {item.hasBadge && pendingCount > 0 && (
                 <Badge
                   variant="secondary"
-                  className={`h-5 min-w-[20px] px-1.5 text-[9px] font-bold ${isActive ? "bg-white/20 text-white border-white/30" : "bg-primary/10 text-primary border-primary/20"}`}
+                  className={`h-4 min-w-[18px] px-1 text-[8px] font-bold ${isActive ? "bg-white/20 text-white border-white/30" : "bg-primary/10 text-primary border-primary/20"}`}
                 >
                   {pendingCount}
                 </Badge>
@@ -116,10 +116,10 @@ export function Sidebar({ currentPage, onNavigate, pendingCount: initialPendingC
       </nav>
 
       {/* Account Info */}
-      <div className="p-6 border-t border-white/5 space-y-6">
-        <div className="p-4 rounded-2xl border border-white/5 bg-white/5 group hover:border-primary/20 transition-all duration-500">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-[#1D1D26] border border-white/10 flex items-center justify-center text-primary overflow-hidden shadow-xl shrink-0">
+      <div className="p-4 border-t border-white/5 space-y-4 shrink-0">
+        <div className="p-3 rounded-2xl border border-white/5 bg-white/5 group hover:border-primary/20 transition-all duration-500">
+          <div className="flex items-center space-x-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-[#1D1D26] border border-white/10 flex items-center justify-center text-primary overflow-hidden shadow-xl shrink-0">
               {user?.avatarUrl ? (
                 <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
               ) : (
@@ -129,27 +129,27 @@ export function Sidebar({ currentPage, onNavigate, pendingCount: initialPendingC
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-bold text-xs tracking-tight text-white truncate">
+              <div className="font-bold text-xs tracking-tight text-white truncate text-[11px]">
                 {user?.firstName} {user?.lastName}
               </div>
-              <div className="text-[9px] text-muted-foreground uppercase font-bold tracking-tight opacity-40 truncate">{user?.email || 'NOT CONNECTED'}</div>
+              <div className="text-[8px] text-muted-foreground uppercase font-bold tracking-tight opacity-40 truncate">{user?.email || 'NOT CONNECTED'}</div>
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-[9px] uppercase font-bold text-muted-foreground tracking-[0.2em] opacity-40">Wallet Status</span>
+            <span className="text-[8px] uppercase font-bold text-muted-foreground tracking-[0.2em] opacity-40">Wallet Status</span>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-status-success animate-pulse"></div>
-              <span className="text-[9px] font-bold text-status-success uppercase tracking-widest">{signerCount} Members</span>
+              <span className="text-[8px] font-bold text-status-success uppercase tracking-widest">{signerCount} Members</span>
             </div>
           </div>
         </div>
         <Button
           onClick={handleLogout}
           variant="ghost"
-          className="w-full justify-start rounded-xl text-muted-foreground hover:bg-status-error/10 hover:text-status-error h-11 transition-all"
+          className="w-full justify-start rounded-xl text-muted-foreground hover:bg-status-error/10 hover:text-status-error h-10 transition-all"
         >
-          <LogOut className="w-4 h-4 mr-3" />
-          <span className="font-bold text-[10px] uppercase tracking-[0.2em]">Logout</span>
+          <LogOut className="w-3.5 h-3.5 mr-2.5" />
+          <span className="font-bold text-[9px] uppercase tracking-[0.2em]">Logout</span>
         </Button>
       </div>
     </div>
@@ -176,7 +176,7 @@ export function Sidebar({ currentPage, onNavigate, pendingCount: initialPendingC
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-64 border-r border-border bg-card flex-col h-screen sticky top-0">
+      <aside className="hidden lg:flex w-64 border-r border-white/5 bg-black/40 backdrop-blur-xl flex-col h-screen sticky top-0">
         <SidebarContent />
       </aside>
 
@@ -185,7 +185,7 @@ export function Sidebar({ currentPage, onNavigate, pendingCount: initialPendingC
         initial={false}
         animate={{ x: isMobileOpen ? 0 : -300 }}
         transition={{ type: "spring", damping: 20 }}
-        className="lg:hidden fixed left-0 top-0 w-64 border-r border-border bg-card h-screen z-40"
+        className="lg:hidden fixed left-0 top-0 w-64 border-r border-white/5 bg-black/60 backdrop-blur-2xl h-screen z-40"
       >
         <SidebarContent />
       </motion.aside>

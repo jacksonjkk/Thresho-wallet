@@ -143,15 +143,7 @@ export function PendingTransactions({ onNavigate }: PendingTransactionsProps) {
     <div className="max-w-5xl mx-auto space-y-8">
       {/* Fancy Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onNavigate("dashboard")}
-            className="rounded-full hover:bg-white/5 border border-white/5"
-          >
-            <ArrowLeft className="w-5 h-5 text-primary" />
-          </Button>
+        <div className="flex items-center">
           <div>
             <h1 className="text-4xl font-bold tracking-tight">Pending <span className="text-primary">Approvals</span></h1>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60 mt-1">Transactions waiting for your signature</p>

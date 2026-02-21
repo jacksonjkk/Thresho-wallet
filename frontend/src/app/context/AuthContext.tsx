@@ -26,7 +26,7 @@ interface AuthContextType {
   isFirstLogin: boolean;
   login: (email: string, password: string) => Promise<void>;
   biometricLogin: () => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   connectWallet: (publicKey: string, signedXdr: string) => Promise<void>;
   disconnectWallet: () => void;
   completeOnboarding: () => Promise<void>;
@@ -44,19 +44,19 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-    // Ensure apiClient uses token from localStorage on startup
-    useEffect(() => {
-      const storedToken = localStorage.getItem('token');
-      if (storedToken) {
-        apiClient.setToken(storedToken);
-      }
-    }, []);
+  // Ensure apiClient uses token from localStorage on startup
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      apiClient.setToken(storedToken);
+    }
+  }, []);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
 
   // Initialize from localStorage and verify token
- useEffect(() => {
+  useEffect(() => {
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
       apiClient.setToken(storedToken);
@@ -101,9 +101,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } catch (error) {
         localStorage.removeItem('user');
         localStorage.removeItem('isFirstLogin');
+        localStorage.removeItem('token');
+        apiClient.setToken(null);
         setUser(null);
       }
-      
+
       setIsLoading(false);
     };
 
@@ -183,7 +185,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const connectWallet = async (publicKey: string, signedXdr: string) => {
     try {
       console.log('Connecting wallet with key:', publicKey);
-      
+
       // Validate public key format
       if (!publicKey.match(/^G[A-Z2-7]{55}$/)) {
         throw new Error('Invalid Stellar public key format (must start with G and be 56 chars)');
@@ -232,7 +234,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const completeOnboarding = async () => {
     try {
       await authService.completeOnboarding();
-      
+
       setUser(prev => prev ? {
         ...prev,
         hasCompletedOnboarding: true
@@ -250,10 +252,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const saveAccountData = async (accountData: CreateAccountRequest) => {
     try {
       const result = await accountService.createAccount(accountData);
-      
+
       // Fetch the created account
       const account = await accountService.getAccount(result.accountId);
-      
+
       // Update user with account info
       setUser(prev => prev ? {
         ...prev,
@@ -305,14 +307,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Track onboarding progress
     localStorage.setItem('onboarding_step', step);
   };
-  const logout = () => {
-    authService.logout();
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
     setUser(null);
     setIsFirstLogin(false);
-    localStorage.removeItem('user');
-
-    localStorage.removeItem('hasCompletedOnboarding');
-    localStorage.removeItem('isFirstLogin');
+    localStorage.clear();
+    // Explicitly remove the token from the API client as well
+    apiClient.setToken(null);
   };
 
   const deleteAccount = async () => {

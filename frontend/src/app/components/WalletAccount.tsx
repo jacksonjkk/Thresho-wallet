@@ -122,15 +122,7 @@ export function WalletAccount({ onNavigate }: WalletAccountProps) {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => onNavigate("dashboard")}
-          className="rounded-full hover:bg-white/5 border border-white/5"
-        >
-          <ArrowLeft className="w-5 h-5 text-primary" />
-        </Button>
+      <div className="flex items-center">
         <div>
           <h1 className="text-4xl font-bold tracking-tight">Wallet <span className="text-primary">Details</span></h1>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60 mt-1">Multi-sig account information</p>
@@ -324,7 +316,7 @@ export function WalletAccount({ onNavigate }: WalletAccountProps) {
                     </div>
                   </div>
                   <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 border-t border-white/5 sm:border-t-0 pt-3 sm:pt-0">
-                    <Badge variant="outline" className="sm:mb-2 whitespace-nowrap bg-primary/5 border-primary/20">
+                    <Badge variant="outline" className="sm:mb-2 whitespace-nowrap bg-primary/10 border-primary/30 text-primary font-bold">
                       Weight: {signer.weight}
                     </Badge>
                     <Badge
@@ -355,7 +347,7 @@ export function WalletAccount({ onNavigate }: WalletAccountProps) {
                       </div>
                     </div>
                     <div className="text-[10px] font-bold uppercase tracking-widest text-primary opacity-60 transition-opacity group-hover/node:opacity-100">{signer.name.split(" ")[0]}</div>
-                    <div className="text-[8px] font-mono text-muted-foreground opacity-40 mt-1 uppercase">Weight: {signer.weight}</div>
+                    <div className="text-[9px] font-bold text-primary tracking-widest mt-1 uppercase">Weight: {signer.weight}</div>
                   </div>
                   {idx < signers.length - 1 && (
                     <div className="hidden sm:block w-16 h-px bg-gradient-to-r from-primary/40 via-primary/10 to-transparent mx-2 opacity-50 relative">
@@ -398,27 +390,27 @@ export function WalletAccount({ onNavigate }: WalletAccountProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-20 flex-col gap-2 bg-white/5 border-white/10 hover:border-primary/50" onClick={() => onNavigate("settings")}>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <Button variant="outline" className="h-20 flex-col gap-2 bg-white/5 border-white/10 hover:border-primary/50 rounded-2xl" onClick={() => onNavigate("settings")}>
               <Shield className="w-5 h-5" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Security</span>
+              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">Security</span>
             </Button>
             <Button
               variant="outline"
-              className="h-20 flex-col gap-2 bg-white/5 border-white/10 hover:border-primary/50"
+              className="h-20 flex-col gap-2 bg-white/5 border-white/10 hover:border-primary/50 rounded-2xl"
               onClick={() => window.open(`https://stellar.expert/explorer/testnet/account/${wallet.publicKey}`, '_blank')}
             >
               <ExternalLink className="w-5 h-5" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Explore</span>
+              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">Explore</span>
             </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2 bg-white/5 border-white/10 hover:border-primary/50">
+            <Button variant="outline" className="h-20 flex-col gap-2 bg-white/5 border-white/10 hover:border-primary/50 rounded-2xl">
               <Copy className="w-5 h-5" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Export</span>
+              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">Export</span>
             </Button>
             {isOwner && (
-              <Button variant="outline" className="h-20 flex-col gap-2 bg-white/5 border-status-error/20 text-status-error hover:bg-status-error/10 hover:border-status-error/50">
+              <Button variant="outline" className="h-20 flex-col gap-2 bg-white/5 border-status-error/20 text-status-error hover:bg-status-error/10 hover:border-status-error/50 rounded-2xl">
                 <Trash2 className="w-5 h-5" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Delete</span>
+                <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">Delete</span>
               </Button>
             )}
           </div>

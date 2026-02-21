@@ -149,15 +149,7 @@ export function TransactionHistory({ onNavigate }: TransactionHistoryProps) {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => onNavigate("dashboard")}
-          className="rounded-full hover:bg-white/5 border border-white/5"
-        >
-          <ArrowLeft className="w-5 h-5 text-primary" />
-        </Button>
+      <div className="flex items-center">
         <div className="flex-1">
           <h1 className="text-4xl font-bold tracking-tight">Transaction <span className="text-primary">History</span></h1>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60 mt-1">Full record of all wallet activity</p>

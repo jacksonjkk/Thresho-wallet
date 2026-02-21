@@ -3,10 +3,12 @@ import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
-import { Fingerprint, Eye, EyeOff, Wallet, Network, Mail, Twitter } from "lucide-react";
+import { Fingerprint, Eye, EyeOff, Network, Mail, Twitter, Shield, ArrowRight, Github } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { authService } from "@/services/auth.service";
+import { motion } from "motion/react";
+import { toast } from "sonner";
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -20,7 +22,6 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
 
-  // Signup state
   const [signupFirstName, setSignupFirstName] = useState("");
   const [signupLastName, setSignupLastName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
@@ -30,6 +31,14 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [signupLoading, setSignupLoading] = useState(false);
 
+  const containerVariants = {
+    hidden: { opacity: 0, x: 20 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.6 }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,9 +46,10 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
 
     try {
       await login(email, password);
+      toast.success("Welcome back!");
       onLogin();
     } catch (err) {
-      setLoginError(err instanceof Error ? err.message : "Login failed");
+      setLoginError(err instanceof Error ? err.message : "Invalid email or password");
     }
   };
 
@@ -48,49 +58,30 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
     setSignupError("");
     setSignupSuccess(false);
 
-    if (!signupFirstName.trim()) {
-      setSignupError("First name is required");
-      return;
-    }
-
-    if (!signupLastName.trim()) {
-      setSignupError("Last name is required");
-      return;
-    }
-
-    if (!signupEmail.trim()) {
-      setSignupError("Email is required");
-      return;
-    }
-
     if (signupPassword !== confirmPassword) {
-      setSignupError("Passwords do not match");
-      return;
-    }
-
-    if (signupPassword.length < 6) {
-      setSignupError("Password must be at least 6 characters");
+      setSignupError("Passwords don't match");
       return;
     }
 
     setSignupLoading(true);
-
     try {
       const emailCheck = await authService.checkEmailExists(signupEmail);
       if (emailCheck.exists) {
-        setSignupError("This email is already registered. Please login or use a different email.");
+        setSignupError("This email is already in use");
         return;
       }
 
       await authService.register(signupFirstName, signupLastName, signupEmail, signupPassword);
       setSignupSuccess(true);
+      toast.success("Account created successfully!");
+
       setSignupFirstName("");
       setSignupLastName("");
       setSignupEmail("");
       setSignupPassword("");
       setConfirmPassword("");
     } catch (err) {
-      setSignupError(err instanceof Error ? err.message : "Signup failed");
+      setSignupError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setSignupLoading(false);
     }
@@ -102,123 +93,123 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
       await biometricLogin();
       onLogin();
     } catch (err) {
-      setLoginError(err instanceof Error ? err.message : "Biometric login not available");
+      setLoginError("Biometric login failed. Please try again.");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
-        {/* Left Side - Illustration */}
-        <div className="hidden lg:flex flex-col items-center justify-center space-y-8">
-          <div className="relative w-full max-w-md">
-            <div className="glass-card rounded-2xl p-12 border border-white/10 relative overflow-hidden group">
-              {/* Decorative Glow */}
-              <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl group-hover:bg-primary/30 transition-all duration-500"></div>
-              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-all duration-500"></div>
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-background relative overflow-hidden">
+      {/* Background Atmosphere */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -mr-32 -mt-32"></div>
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none -ml-32 -mb-32"></div>
 
-              <div className="flex items-center justify-center mb-8 animate-float">
-                <div className="p-4 relative">
-                  <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full"></div>
-                  <img src="/logo.png" alt="Thresho" className="w-32 h-32 relative z-10" />
-                </div>
-              </div>
-              <h1 className="text-5xl text-center mb-4 tracking-tighter" style={{ fontFamily: 'var(--font-serif)' }}>
-                Thresho
-              </h1>
-              <p className="text-center text-muted-foreground mb-8 text-sm font-medium tracking-widest uppercase">
-                Secure Multi-Signature Wallet
-              </p>
+      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 lg:gap-24 items-center relative z-10">
 
-              {/* Visual Multi-Sig Illustration */}
-              <div className="flex items-center justify-center space-x-4 mb-6">
-                <div className="flex items-center space-x-2">
-                  <div className="w-10 h-10 rounded-xl bg-secondary/50 backdrop-blur-md flex items-center justify-center border border-white/5">
-                    <img src="/logo.png" alt="Thresho" className="w-8 h-8 opacity-80" />
-                  </div>
-                  <div className="h-px w-8 bg-gradient-to-r from-border to-transparent"></div>
-                </div>
-                <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white shadow-[0_0_30px_rgba(99,102,241,0.4)]">
-                  <Network className="w-7 h-7" />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="h-px w-8 bg-gradient-to-l from-border to-transparent"></div>
-                  <div className="w-10 h-10 rounded-xl bg-secondary/50 backdrop-blur-md flex items-center justify-center border border-white/5">
-                    <img src="/logo.png" alt="Thresho" className="w-8 h-8 opacity-80" />
-                  </div>
-                </div>
+        {/* Left Side: Editorial Content */}
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          className="hidden lg:flex flex-col space-y-12"
+        >
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <div className="bg-primary/10 p-2.5 rounded-xl border border-primary/20">
+                <Shield className="w-5 h-5 text-primary" />
               </div>
-
-              <div className="space-y-3 text-sm text-muted-foreground">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(99,102,241,0.6)]"></div>
-                  <span className="font-medium">Secure multi-signature transactions</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]"></div>
-                  <span className="font-medium">Enterprise-grade security</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.6)]"></div>
-                  <span className="font-medium">Collaborative wallet management</span>
-                </div>
-              </div>
+              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/80">Secured Entry Point</span>
             </div>
-          </div>
-        </div>
 
-        {/* Right Side - Login Form */}
-        <div className="flex items-center justify-center">
-          <Card className="w-full max-w-md">
-            <CardHeader className="space-y-1">
-              <div className="flex items-center justify-center mb-4 lg:hidden">
-                <div className="p-3">
-                  <img src="/logo.png" alt="Thresho" className="w-16 h-16" />
+            <h1 className="text-7xl font-bold tracking-tighter leading-[0.85] text-white" style={{ fontFamily: 'var(--font-serif)' }}>
+              Access your <br />
+              <span className="text-primary italic">Digital Vault.</span>
+            </h1>
+
+            <p className="text-lg text-muted-foreground/60 max-w-md font-medium tracking-tight leading-relaxed">
+              Precision multi-signature infrastructure for the collaborative era. Secure, transparent, and sovereign.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-6 max-w-lg">
+            {[
+              { icon: Network, label: "Consensus", value: "Multi-sig 2.0" },
+              { icon: Fingerprint, label: "Identity", value: "Biometric Auth" }
+            ].map((stat, i) => (
+              <div key={i} className="p-5 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-sm group hover:border-primary/20 transition-all">
+                <stat.icon className="w-5 h-5 text-primary mb-3 opacity-60 group-hover:opacity-100 transition-opacity" />
+                <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-50 mb-1">{stat.label}</div>
+                <div className="text-sm font-bold text-white tracking-tight">{stat.value}</div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Right Side: Auth Card */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="flex items-center justify-center w-full"
+        >
+          <Card className="w-full max-w-md border border-white/5 bg-white/5 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50"></div>
+
+            <CardHeader className="space-y-4 pt-12 pb-6">
+              <div className="flex items-center justify-center lg:hidden mb-2">
+                <div className="relative group/logo">
+                  <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full scale-150"></div>
+                  <img src="/logo.png" alt="Thresho" className="w-16 h-16 relative z-10" />
                 </div>
               </div>
-              <CardTitle className="text-center text-2xl font-bold tracking-tight">Welcome Back</CardTitle>
-              <CardDescription className="text-center">
-                Securely sign into your wallet
-              </CardDescription>
+              <div className="space-y-1.5 text-center">
+                <CardTitle className="text-3xl font-bold tracking-tight">Welcome back</CardTitle>
+                <CardDescription className="text-xs uppercase font-bold tracking-[0.2em] text-muted-foreground opacity-50">
+                  Securely sign into your account
+                </CardDescription>
+              </div>
             </CardHeader>
-            <CardContent>
+
+            <CardContent className="px-6 sm:px-10 pb-10">
               <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="login">Login</TabsTrigger>
-                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 mb-8 h-12 p-1 bg-black/40 border border-white/5 rounded-xl">
+                  <TabsTrigger value="login" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white text-[10px] font-bold uppercase tracking-widest">Login</TabsTrigger>
+                  <TabsTrigger value="signup" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white text-[10px] font-bold uppercase tracking-widest">Signup</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="login">
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        disabled={isLoading}
-                        required
-                      />
+                <TabsContent value="login" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <form onSubmit={handleSubmit} className="space-y-5">
+                    <div className="space-y-2.5">
+                      <Label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-70 ml-1">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground opacity-40" />
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="node@thresho.secure"
+                          className="h-12 pl-12 bg-white/5 border-white/5 hover:border-white/10 focus:ring-primary/50 rounded-xl text-xs font-medium transition-all"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
+
+                    <div className="space-y-2.5">
+                      <Label htmlFor="password" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-70 ml-1">Password</Label>
                       <div className="relative">
                         <Input
                           id="password"
                           type={showPassword ? "text" : "password"}
                           placeholder="••••••••"
+                          className="h-12 bg-white/5 border-white/5 hover:border-white/10 focus:ring-primary/50 rounded-xl text-xs font-medium transition-all"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          disabled={isLoading}
                           required
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50"
-                          disabled={isLoading}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                         >
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
@@ -226,168 +217,126 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                     </div>
 
                     {loginError && (
-                      <div className="p-3 bg-destructive/5 border border-destructive/20 rounded-sm text-sm text-destructive">
+                      <div className="p-3.5 rounded-lg border border-status-error/20 bg-status-error/5 text-[10px] font-bold uppercase tracking-widest text-status-error animate-shake">
                         {loginError}
                       </div>
                     )}
 
-                    <div className="flex justify-center pt-2">
-                      <Button type="submit" className="w-full max-w-xs" size="lg" disabled={isLoading}>
-                        {isLoading ? "Signing in..." : "Sign In"}
-                      </Button>
+                    <Button type="submit" disabled={isLoading} className="w-full h-14 bg-primary hover:bg-primary/90 text-xs font-bold uppercase tracking-widest rounded-xl shadow-xl group transition-all">
+                      {isLoading ? "Signing in..." : "Login"}
+                      <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                    </Button>
+
+                    <div className="relative py-2">
+                      <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
+                      <div className="relative flex justify-center text-[8px] uppercase tracking-[0.3em] font-bold text-muted-foreground opacity-30"><span className="bg-transparent px-4 italic">Or continue with</span></div>
                     </div>
 
-                    <div className="relative my-6">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t"></span>
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-center">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full max-w-xs"
-                        onClick={handleBiometricLogin}
-                        disabled={isLoading}
-                      >
+                    <div className="space-y-4">
+                      <Button type="button" variant="outline" onClick={handleBiometricLogin} className="w-full h-12 bg-white/5 border-white/5 hover:bg-white/10 rounded-xl text-[9px] font-bold uppercase tracking-widest">
                         <Fingerprint className="w-4 h-4 mr-2 text-primary" />
                         Biometric Login
                       </Button>
-                    </div>
 
-                    <div className="relative my-6">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-white/5"></span>
+                      <div className="relative py-2">
+                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
+                        <div className="relative flex justify-center text-[8px] uppercase tracking-[0.3em] font-bold text-muted-foreground opacity-30"><span className="bg-transparent px-4 italic">Social Connect</span></div>
                       </div>
-                      <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
-                        <span className="bg-card px-4 text-muted-foreground">Social Connect</span>
-                      </div>
-                    </div>
 
-                    <div className="flex gap-4 justify-center">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="rounded-full w-12 h-12 hover:border-primary/50 transition-all"
-                        disabled={isLoading}
-                        title="Continue with Gmail"
-                      >
-                        <Mail className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="rounded-full w-12 h-12 hover:border-primary/50 transition-all"
-                        disabled={isLoading}
-                        title="Continue with X"
-                      >
-                        <Twitter className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
-                      </Button>
+                      <div className="flex gap-4 justify-center">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="rounded-full w-12 h-12 hover:border-primary/50 transition-all bg-white/5"
+                          disabled={isLoading}
+                        >
+                          <Mail className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="rounded-full w-12 h-12 hover:border-primary/50 transition-all bg-white/5"
+                          disabled={isLoading}
+                        >
+                          <Twitter className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
+                        </Button>
+                      </div>
                     </div>
                   </form>
                 </TabsContent>
 
-                <TabsContent value="signup">
-                  <form onSubmit={handleSignupSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-first-name">First Name</Label>
+                <TabsContent value="signup" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <form onSubmit={handleSignupSubmit} className="space-y-5">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2.5">
+                        <Label className="text-[10px] uppercase tracking-widest opacity-70">First Name</Label>
                         <Input
-                          id="signup-first-name"
-                          type="text"
                           placeholder="John"
+                          className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
                           value={signupFirstName}
                           onChange={(e) => setSignupFirstName(e.target.value)}
-                          disabled={signupLoading || isLoading}
                           required
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-last-name">Last Name</Label>
+                      <div className="space-y-2.5">
+                        <Label className="text-[10px] uppercase tracking-widest opacity-70">Last Name</Label>
                         <Input
-                          id="signup-last-name"
-                          type="text"
                           placeholder="Doe"
+                          className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
                           value={signupLastName}
                           onChange={(e) => setSignupLastName(e.target.value)}
-                          disabled={signupLoading || isLoading}
                           required
                         />
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
+
+                    <div className="space-y-2.5">
+                      <Label className="text-[10px] uppercase tracking-widest opacity-70">Email</Label>
                       <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="your@email.com"
+                        placeholder="john@example.com"
+                        className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
                         value={signupEmail}
                         onChange={(e) => setSignupEmail(e.target.value)}
-                        disabled={signupLoading || isLoading}
                         required
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
+
+                    <div className="space-y-2.5">
+                      <Label className="text-[10px] uppercase tracking-widest opacity-70">Password</Label>
                       <Input
-                        id="signup-password"
                         type="password"
                         placeholder="••••••••"
+                        className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
-                        disabled={signupLoading || isLoading}
                         required
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirm-password">Confirm Password</Label>
+
+                    <div className="space-y-2.5">
+                      <Label className="text-[10px] uppercase tracking-widest opacity-70">Confirm Password</Label>
                       <Input
-                        id="confirm-password"
                         type="password"
                         placeholder="••••••••"
+                        className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        disabled={signupLoading || isLoading}
                         required
                       />
                     </div>
 
-                    {signupError && (
-                      <div className="p-3 bg-destructive/5 border border-destructive/20 rounded-sm text-sm text-destructive">
-                        {signupError}
-                      </div>
-                    )}
+                    {signupError && <div className="p-3.5 rounded-lg border border-status-error/20 bg-status-error/5 text-[10px] font-bold text-status-error">{signupError}</div>}
 
-                    {signupSuccess && (
-                      <div className="p-3 bg-[#065F46]/5 border border-[#065F46]/20 rounded-sm text-sm text-[#065F46]">
-                        Account created successfully! You can now log in.
-                      </div>
-                    )}
+                    <Button type="submit" disabled={signupLoading} className="w-full h-14 bg-primary hover:bg-primary/90 text-[10px] font-bold uppercase tracking-widest rounded-xl shadow-xl">
+                      {signupLoading ? "Creating..." : "Sign Up"}
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
 
-                    <div className="flex justify-center pt-2">
-                      <Button
-                        type="submit"
-                        className="w-full max-w-xs"
-                        size="lg"
-                        disabled={signupLoading || isLoading}
-                      >
-                        {signupLoading ? "Processing..." : "Create Account"}
-                      </Button>
-                    </div>
-
-                    <div className="relative my-6">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-white/5"></span>
-                      </div>
-                      <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
-                        <span className="bg-card px-4 text-muted-foreground">Traditional Auth</span>
-                      </div>
+                    <div className="relative py-2">
+                      <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
+                      <div className="relative flex justify-center text-[8px] uppercase tracking-[0.3em] font-bold text-muted-foreground opacity-30"><span className="bg-transparent px-4 italic">Social Connect</span></div>
                     </div>
 
                     <div className="flex gap-4 justify-center">
@@ -395,9 +344,8 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                         type="button"
                         variant="outline"
                         size="icon"
-                        className="rounded-full w-12 h-12 hover:border-primary/50 transition-all"
-                        disabled={signupLoading || isLoading}
-                        title="Continue with Gmail"
+                        className="rounded-full w-12 h-12 hover:border-primary/50 transition-all bg-white/5"
+                        disabled={isLoading}
                       >
                         <Mail className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
                       </Button>
@@ -405,9 +353,8 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                         type="button"
                         variant="outline"
                         size="icon"
-                        className="rounded-full w-12 h-12 hover:border-primary/50 transition-all"
-                        disabled={signupLoading || isLoading}
-                        title="Continue with X"
+                        className="rounded-full w-12 h-12 hover:border-primary/50 transition-all bg-white/5"
+                        disabled={isLoading}
                       >
                         <Twitter className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
                       </Button>
@@ -417,8 +364,9 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
               </Tabs>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
       </div>
+
     </div>
   );
 }
