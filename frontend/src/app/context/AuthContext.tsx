@@ -33,8 +33,7 @@ interface AuthContextType {
   saveAccountData: (accountData: CreateAccountRequest) => Promise<void>;
   refreshAccountData: () => Promise<void>;
   updateOnboarding: (step: 'welcome' | 'wallet' | 'account') => void;
-  updateProfile: (data: { firstName?: string; lastName?: string; avatarUrl?: string | null; stellarPublicKey?: string }) => Promise<void>;
-  deleteAccount: () => Promise<void>;
+  updateProfile: (data: { firstName?: string; lastName?: string; avatarUrl?: string | null }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,7 +48,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isFirstLogin, setIsFirstLogin] = useState(false);
 
   // Initialize from localStorage and verify token
-  useEffect(() => {
+ useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      apiClient.setToken(storedToken);
+    }
     const initializeAuth = async () => {
       try {
         // Verify session by fetching profile (cookie-based)
@@ -92,7 +95,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.removeItem('isFirstLogin');
         setUser(null);
       }
-
+      
       setIsLoading(false);
     };
 
@@ -112,7 +115,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     try {
       const response = await authService.login(email, password);
-
+      
       // Check if this is first login (onboarding not completed)
       if (!response.user.hasCompletedOnboarding) {
         setIsFirstLogin(true);
@@ -121,7 +124,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsFirstLogin(false);
         localStorage.removeItem('isFirstLogin');
       }
-
+      
       // Try to fetch user's account if onboarding completed
       let account: Account | undefined;
       if (response.user.hasCompletedOnboarding) {
@@ -171,7 +174,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const connectWallet = async (publicKey: string, signedXdr: string) => {
     try {
       console.log('Connecting wallet with key:', publicKey);
-
+      
       // Validate public key format
       if (!publicKey.match(/^G[A-Z2-7]{55}$/)) {
         throw new Error('Invalid Stellar public key format (must start with G and be 56 chars)');
@@ -181,14 +184,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Verify with backend
         await authService.verifyChallenge(signedXdr, publicKey);
         console.log('Challenge verified');
-
-        // Persist the public key to the user profile
-        await authService.updateProfile({ stellarPublicKey: publicKey });
-        console.log('Public key persisted to backend profile');
       } else {
         console.log('Manual wallet input - skipping signature verification');
-        // Still persist even if manual? Docs/Logic suggests manual is also allowed
-        await authService.updateProfile({ stellarPublicKey: publicKey });
       }
 
       // Update user state
@@ -226,7 +223,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const completeOnboarding = async () => {
     try {
       await authService.completeOnboarding();
-
+      
       setUser(prev => prev ? {
         ...prev,
         hasCompletedOnboarding: true
@@ -244,10 +241,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const saveAccountData = async (accountData: CreateAccountRequest) => {
     try {
       const result = await accountService.createAccount(accountData);
-
+      
       // Fetch the created account
       const account = await accountService.getAccount(result.accountId);
-
+      
       // Update user with account info
       setUser(prev => prev ? {
         ...prev,
@@ -321,7 +318,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const value: AuthContextType = {
+  const value: AuthContextType & { deleteAccount: () => Promise<void> } = {
     user,
     isLoading,
     isFirstLogin,
