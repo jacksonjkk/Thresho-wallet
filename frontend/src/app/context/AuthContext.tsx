@@ -123,7 +123,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     try {
       const response = await authService.login(email, password);
-      
+      // Set token in apiClient and localStorage
+      if (response.token) {
+        apiClient.setToken(response.token);
+        localStorage.setItem('token', response.token);
+      }
       // Check if this is first login (onboarding not completed)
       if (!response.user.hasCompletedOnboarding) {
         setIsFirstLogin(true);
@@ -132,7 +136,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsFirstLogin(false);
         localStorage.removeItem('isFirstLogin');
       }
-      
       // Try to fetch user's account if onboarding completed
       let account: Account | undefined;
       if (response.user.hasCompletedOnboarding) {
@@ -145,7 +148,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.error('Failed to fetch accounts:', err);
         }
       }
-
       const loginUser: User = {
         id: response.user.id,
         firstName: response.user.firstName,
@@ -158,7 +160,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         account: account,
         avatarUrl: response.user.avatarUrl ?? null,
       };
-
       setUser(loginUser);
       localStorage.setItem('user', JSON.stringify(loginUser));
     } catch (error) {
