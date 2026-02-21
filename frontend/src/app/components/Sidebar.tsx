@@ -116,7 +116,7 @@ export function Sidebar({ currentPage, onNavigate, pendingCount: initialPendingC
       </nav>
 
       {/* Account Info */}
-      <div className="p-4 border-t border-white/5 space-y-4 shrink-0">
+      <div className="p-4 border-t border-white/5 space-y-4 shrink-0 mb-5">
         <div className="p-3 rounded-2xl border border-white/5 bg-white/5 group hover:border-primary/20 transition-all duration-500">
           <div className="flex items-center space-x-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-[#1D1D26] border border-white/10 flex items-center justify-center text-primary overflow-hidden shadow-xl shrink-0">
