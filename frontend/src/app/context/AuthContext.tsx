@@ -34,6 +34,7 @@ interface AuthContextType {
   refreshAccountData: () => Promise<void>;
   updateOnboarding: (step: 'welcome' | 'wallet' | 'account') => void;
   updateProfile: (data: { firstName?: string; lastName?: string; avatarUrl?: string | null }) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
