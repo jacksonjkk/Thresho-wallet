@@ -31,6 +31,7 @@ interface Transaction {
   amount: string;
   asset: string;
   recipient: string;
+  from?: string;
   timestamp: string;
   status: "completed" | "pending" | "rejected" | "executed";
   approvals?: number;
@@ -113,6 +114,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 amount: amt,
                 asset: tx.asset_type === 'native' ? "XLM" : (tx.asset_code || "XLM"),
                 recipient: isIncoming ? src : dest,
+                from: src,
                 timestamp: formatDistanceToNow(new Date(tx.created_at), { addSuffix: true }),
                 status: "completed" as const,
                 onChain: true,
