@@ -285,7 +285,7 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                       <div className="space-y-2.5">
                         <Label className="text-[10px] uppercase tracking-widest opacity-70">Last Name</Label>
                         <Input
-                          placeholder="second name"
+                          placeholder="last name"
                           className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
                           value={signupLastName}
                           onChange={(e) => setSignupLastName(e.target.value)}
