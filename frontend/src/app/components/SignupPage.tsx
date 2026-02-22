@@ -135,7 +135,7 @@ export function SignupPage({ onLoginClick }: SignupPageProps) {
                   <div className="space-y-2">
                     <Label className="text-[10px] uppercase tracking-widest opacity-70">First Name</Label>
                     <Input
-                      placeholder="JOHN"
+                      placeholder="firstname"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       disabled={loading || success}
@@ -146,7 +146,7 @@ export function SignupPage({ onLoginClick }: SignupPageProps) {
                   <div className="space-y-2">
                     <Label className="text-[10px] uppercase tracking-widest opacity-70">Last Name</Label>
                     <Input
-                      placeholder="DOE"
+                      placeholder="lastname"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       disabled={loading || success}
@@ -160,7 +160,7 @@ export function SignupPage({ onLoginClick }: SignupPageProps) {
                   <Label className="text-[10px] uppercase tracking-widest opacity-70">Email</Label>
                   <Input
                     type="email"
-                    placeholder="YOUR@EMAIL.COM"
+                    placeholder="example@gmail.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={loading || success}
