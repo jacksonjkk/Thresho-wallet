@@ -122,7 +122,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [user]);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
     try {
       const response = await authService.login(email, password);
       // Set token in apiClient and localStorage
@@ -166,19 +165,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(loginUser));
     } catch (error) {
       throw error instanceof Error ? error : new Error('Login failed');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const biometricLogin = async () => {
-    setIsLoading(true);
     try {
       // TODO: Implement biometric login with backend
       // This would call an endpoint like /auth/biometric-login
       throw new Error('Biometric login not yet implemented');
     } finally {
-      setIsLoading(false);
+      // Local state should handle this
     }
   };
 
