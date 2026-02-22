@@ -275,7 +275,7 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                       <div className="space-y-2.5">
                         <Label className="text-[10px] uppercase tracking-widest opacity-70">First Name</Label>
                         <Input
-                          placeholder="John"
+                          placeholder="first name"
                           className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
                           value={signupFirstName}
                           onChange={(e) => setSignupFirstName(e.target.value)}
@@ -285,7 +285,7 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                       <div className="space-y-2.5">
                         <Label className="text-[10px] uppercase tracking-widest opacity-70">Last Name</Label>
                         <Input
-                          placeholder="Doe"
+                          placeholder="second name"
                           className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
                           value={signupLastName}
                           onChange={(e) => setSignupLastName(e.target.value)}
@@ -297,7 +297,7 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                     <div className="space-y-2.5">
                       <Label className="text-[10px] uppercase tracking-widest opacity-70">Email</Label>
                       <Input
-                        placeholder="john@example.com"
+                        placeholder="examople@gmail.com"
                         className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
                         value={signupEmail}
                         onChange={(e) => setSignupEmail(e.target.value)}
