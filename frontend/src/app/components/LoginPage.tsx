@@ -18,6 +18,8 @@ interface LoginPageProps {
 export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
   const { login, biometricLogin, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -185,7 +187,7 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                         <Input
                           id="email"
                           type="email"
-                          placeholder="node@thresho.secure"
+                          placeholder="example@gmail.com"
                           className="h-12 pl-12 bg-white/5 border-white/5 hover:border-white/10 focus:ring-primary/50 rounded-xl text-xs font-medium transition-all"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
@@ -305,26 +307,44 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
 
                     <div className="space-y-2.5">
                       <Label className="text-[10px] uppercase tracking-widest opacity-70">Password</Label>
-                      <Input
-                        type="password"
-                        placeholder="••••••••"
-                        className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
-                        value={signupPassword}
-                        onChange={(e) => setSignupPassword(e.target.value)}
-                        required
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showSignupPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
+                          value={signupPassword}
+                          onChange={(e) => setSignupPassword(e.target.value)}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowSignupPassword(!showSignupPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          {showSignupPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
 
                     <div className="space-y-2.5">
                       <Label className="text-[10px] uppercase tracking-widest opacity-70">Confirm Password</Label>
-                      <Input
-                        type="password"
-                        placeholder="••••••••"
-                        className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
 
                     {signupError && <div className="p-3.5 rounded-lg border border-status-error/20 bg-status-error/5 text-[10px] font-bold text-status-error">{signupError}</div>}
