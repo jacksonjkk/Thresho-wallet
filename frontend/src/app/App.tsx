@@ -155,7 +155,7 @@ export default function App() {
   return (
     <>
       <Toaster position="top-center" richColors />
-      <div className="flex min-h-screen bg-background">
+      <div className="flex h-[100dvh] bg-background overflow-hidden relative">
         <Sidebar
           currentPage={currentPage}
           onNavigate={handleNavigate}
