@@ -176,7 +176,7 @@ export function Sidebar({ currentPage, onNavigate, pendingCount: initialPendingC
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-64 border-r border-white/5 bg-black/40 backdrop-blur-xl flex-col h-screen sticky top-0">
+      <aside className="hidden lg:flex w-64 border-r border-white/5 bg-black/40 backdrop-blur-xl flex-col h-[100dvh] sticky top-0">
         <SidebarContent />
       </aside>
 
@@ -185,7 +185,7 @@ export function Sidebar({ currentPage, onNavigate, pendingCount: initialPendingC
         initial={false}
         animate={{ x: isMobileOpen ? 0 : -300 }}
         transition={{ type: "spring", damping: 20 }}
-        className="lg:hidden fixed left-0 top-0 w-64 border-r border-white/5 bg-black/60 backdrop-blur-2xl h-screen z-40"
+        className="lg:hidden fixed left-0 top-0 w-64 border-r border-white/5 bg-black/60 backdrop-blur-2xl h-[100dvh] z-40"
       >
         <SidebarContent />
       </motion.aside>
