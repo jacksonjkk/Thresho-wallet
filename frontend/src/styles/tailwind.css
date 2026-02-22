@@ -3,21 +3,15 @@
 
 @source '../**/*.{js,ts,jsx,tsx}';
 
-/* Clean scrollbar — Editorial style */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Nuclear Scrollbar Removal — Fixed per user request */
+* {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #D1D5DB;
-  border-radius: 0;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #9CA3AF;
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }
