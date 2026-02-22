@@ -137,9 +137,12 @@ export function SignupPage({ onLoginClick }: SignupPageProps) {
                     <Input
                       placeholder="firstname"
                       value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
+                      onChange={(e) => {
+                        setFirstName(e.target.value);
+                        if (error) setError("");
+                      }}
                       disabled={loading || success}
-                      className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
+                      className={`h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium transition-all ${error ? 'border-status-error/50 ring-1 ring-status-error/10' : ''}`}
                       required
                     />
                   </div>
@@ -148,9 +151,12 @@ export function SignupPage({ onLoginClick }: SignupPageProps) {
                     <Input
                       placeholder="lastname"
                       value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
+                      onChange={(e) => {
+                        setLastName(e.target.value);
+                        if (error) setError("");
+                      }}
                       disabled={loading || success}
-                      className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
+                      className={`h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium transition-all ${error ? 'border-status-error/50 ring-1 ring-status-error/10' : ''}`}
                       required
                     />
                   </div>
@@ -162,9 +168,12 @@ export function SignupPage({ onLoginClick }: SignupPageProps) {
                     type="email"
                     placeholder="example@gmail.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (error) setError("");
+                    }}
                     disabled={loading || success}
-                    className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
+                    className={`h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium transition-all ${error ? 'border-status-error/50 ring-1 ring-status-error/10' : ''}`}
                     required
                   />
                 </div>
@@ -176,9 +185,12 @@ export function SignupPage({ onLoginClick }: SignupPageProps) {
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (error) setError("");
+                      }}
                       disabled={loading || success}
-                      className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
+                      className={`h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium transition-all ${error ? 'border-status-error/50 ring-1 ring-status-error/10' : ''}`}
                       required
                     />
                     <button
@@ -198,9 +210,12 @@ export function SignupPage({ onLoginClick }: SignupPageProps) {
                       type={showConfirm ? "text" : "password"}
                       placeholder="••••••••"
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (error) setError("");
+                      }}
                       disabled={loading || success}
-                      className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
+                      className={`h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium transition-all ${error ? 'border-status-error/50 ring-1 ring-status-error/10' : ''}`}
                       required
                     />
                     <button
