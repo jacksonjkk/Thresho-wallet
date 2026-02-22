@@ -297,7 +297,7 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                     <div className="space-y-2.5">
                       <Label className="text-[10px] uppercase tracking-widest opacity-70">Email</Label>
                       <Input
-                        placeholder="examople@gmail.com"
+                        placeholder="example@gmail.com"
                         className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
                         value={signupEmail}
                         onChange={(e) => setSignupEmail(e.target.value)}
