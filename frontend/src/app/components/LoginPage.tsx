@@ -23,6 +23,8 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isBiometricLoading, setIsBiometricLoading] = useState(false);
 
   const [signupFirstName, setSignupFirstName] = useState("");
   const [signupLastName, setSignupLastName] = useState("");
@@ -45,6 +47,7 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
+    setIsLoggingIn(true);
 
     try {
       await login(email, password);
@@ -52,6 +55,8 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
       onLogin();
     } catch (err) {
       setLoginError(err instanceof Error ? err.message : "Invalid email or password");
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -91,11 +96,14 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
 
   const handleBiometricLogin = async () => {
     setLoginError("");
+    setIsBiometricLoading(true);
     try {
       await biometricLogin();
       onLogin();
     } catch (err) {
       setLoginError("Biometric login failed. Please try again.");
+    } finally {
+      setIsBiometricLoading(false);
     }
   };
 
@@ -188,9 +196,12 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                           id="email"
                           type="email"
                           placeholder="example@gmail.com"
-                          className="h-12 pl-12 bg-white/5 border-white/5 hover:border-white/10 focus:ring-primary/50 rounded-xl text-xs font-medium transition-all"
+                          className={`h-12 pl-12 bg-white/5 border-white/5 hover:border-white/10 focus:ring-primary/50 rounded-xl text-xs font-medium transition-all ${loginError ? 'border-status-error/50 ring-1 ring-status-error/20' : ''}`}
                           value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            if (loginError) setLoginError("");
+                          }}
                           required
                         />
                       </div>
@@ -203,9 +214,12 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                           id="password"
                           type={showPassword ? "text" : "password"}
                           placeholder="••••••••"
-                          className="h-12 bg-white/5 border-white/5 hover:border-white/10 focus:ring-primary/50 rounded-xl text-xs font-medium transition-all"
+                          className={`h-12 bg-white/5 border-white/5 hover:border-white/10 focus:ring-primary/50 rounded-xl text-xs font-medium transition-all ${loginError ? 'border-status-error/50 ring-1 ring-status-error/20' : ''}`}
                           value={password}
-                          onChange={(e) => setPassword(e.target.value)}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            if (loginError) setLoginError("");
+                          }}
                           required
                         />
                         <button
@@ -224,8 +238,8 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                       </div>
                     )}
 
-                    <Button type="submit" disabled={isLoading} className="w-full h-14 bg-primary hover:bg-primary/90 text-xs font-bold uppercase tracking-widest rounded-xl shadow-xl group transition-all">
-                      {isLoading ? "Signing in..." : "Login"}
+                    <Button type="submit" disabled={isLoggingIn} className="w-full h-14 bg-primary hover:bg-primary/90 text-xs font-bold uppercase tracking-widest rounded-xl shadow-xl group transition-all">
+                      {isLoggingIn ? "Signing in..." : "Login"}
                       <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
                     </Button>
 
@@ -235,9 +249,9 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                     </div>
 
                     <div className="space-y-4">
-                      <Button type="button" variant="outline" onClick={handleBiometricLogin} className="w-full h-12 bg-white/5 border-white/5 hover:bg-white/10 rounded-xl text-[9px] font-bold uppercase tracking-widest">
+                      <Button type="button" variant="outline" onClick={handleBiometricLogin} disabled={isBiometricLoading} className="w-full h-12 bg-white/5 border-white/5 hover:bg-white/10 rounded-xl text-[9px] font-bold uppercase tracking-widest">
                         <Fingerprint className="w-4 h-4 mr-2 text-primary" />
-                        Biometric Login
+                        {isBiometricLoading ? "Verifying..." : "Biometric Login"}
                       </Button>
 
                       <div className="relative py-2">
@@ -276,9 +290,12 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                         <Label className="text-[10px] uppercase tracking-widest opacity-70">First Name</Label>
                         <Input
                           placeholder="first name"
-                          className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
+                          className={`h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium transition-all ${signupError ? 'border-status-error/50' : ''}`}
                           value={signupFirstName}
-                          onChange={(e) => setSignupFirstName(e.target.value)}
+                          onChange={(e) => {
+                            setSignupFirstName(e.target.value);
+                            if (signupError) setSignupError("");
+                          }}
                           required
                         />
                       </div>
@@ -286,9 +303,12 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                         <Label className="text-[10px] uppercase tracking-widest opacity-70">Last Name</Label>
                         <Input
                           placeholder="last name"
-                          className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
+                          className={`h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium transition-all ${signupError ? 'border-status-error/50' : ''}`}
                           value={signupLastName}
-                          onChange={(e) => setSignupLastName(e.target.value)}
+                          onChange={(e) => {
+                            setSignupLastName(e.target.value);
+                            if (signupError) setSignupError("");
+                          }}
                           required
                         />
                       </div>
@@ -298,9 +318,12 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                       <Label className="text-[10px] uppercase tracking-widest opacity-70">Email</Label>
                       <Input
                         placeholder="example@gmail.com"
-                        className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
+                        className={`h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium transition-all ${signupError ? 'border-status-error/50' : ''}`}
                         value={signupEmail}
-                        onChange={(e) => setSignupEmail(e.target.value)}
+                        onChange={(e) => {
+                          setSignupEmail(e.target.value);
+                          if (signupError) setSignupError("");
+                        }}
                         required
                       />
                     </div>
@@ -311,9 +334,12 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                         <Input
                           type={showSignupPassword ? "text" : "password"}
                           placeholder="••••••••"
-                          className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
+                          className={`h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium transition-all ${signupError ? 'border-status-error/50' : ''}`}
                           value={signupPassword}
-                          onChange={(e) => setSignupPassword(e.target.value)}
+                          onChange={(e) => {
+                            setSignupPassword(e.target.value);
+                            if (signupError) setSignupError("");
+                          }}
                           required
                         />
                         <button
@@ -332,9 +358,12 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                         <Input
                           type={showConfirmPassword ? "text" : "password"}
                           placeholder="••••••••"
-                          className="h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium"
+                          className={`h-12 bg-white/5 border-white/5 rounded-xl text-xs font-medium transition-all ${signupError ? 'border-status-error/50' : ''}`}
                           value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          onChange={(e) => {
+                            setConfirmPassword(e.target.value);
+                            if (signupError) setSignupError("");
+                          }}
                           required
                         />
                         <button
@@ -347,7 +376,7 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                       </div>
                     </div>
 
-                    {signupError && <div className="p-3.5 rounded-lg border border-status-error/20 bg-status-error/5 text-[10px] font-bold text-status-error">{signupError}</div>}
+                    {signupError && <div className="p-3.5 rounded-lg border border-status-error/20 bg-status-error/5 text-[10px] font-bold text-status-error animate-shake">{signupError}</div>}
 
                     <Button type="submit" disabled={signupLoading} className="w-full h-14 bg-primary hover:bg-primary/90 text-[10px] font-bold uppercase tracking-widest rounded-xl shadow-xl">
                       {signupLoading ? "Creating..." : "Sign Up"}
