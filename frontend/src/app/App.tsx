@@ -13,6 +13,7 @@ import { TransactionHistory } from "@/app/components/TransactionHistory";
 import { WalletAccount } from "@/app/components/WalletAccount";
 import { RulesSettings } from "@/app/components/RulesSettings";
 import { Sidebar } from "@/app/components/Sidebar";
+import { IdleMonitor } from "@/app/components/IdleMonitor";
 
 type AuthScreen = "login" | "signup";
 type OnboardingStep = "welcome" | "wallet" | "account";
@@ -155,6 +156,7 @@ export default function App() {
   return (
     <>
       <Toaster position="top-center" richColors />
+      <IdleMonitor />
       <div className="flex h-[100dvh] bg-background overflow-hidden relative">
         <Sidebar
           currentPage={currentPage}
