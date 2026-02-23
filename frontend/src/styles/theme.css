@@ -111,6 +111,11 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  /* ── Status Colors ── */
+  --color-status-success: var(--status-success);
+  --color-status-error: var(--status-error);
+  --color-status-pending: var(--status-pending);
+
   /* ── Expose font families to Tailwind ── */
   --font-serif: var(--font-serif);
   --font-sans: var(--font-sans);

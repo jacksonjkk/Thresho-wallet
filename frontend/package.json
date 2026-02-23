@@ -37,6 +37,8 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@stellar/freighter-api": "^6.0.1",
+    "@walletconnect/core": "^2.23.6",
+    "@walletconnect/modal": "^2.7.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

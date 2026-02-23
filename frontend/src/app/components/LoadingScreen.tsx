@@ -5,8 +5,9 @@ export function LoadingScreen() {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center">
         <div className="mx-auto mb-6">
-          <img src="/logo.png" alt="Thresho" className="w-20 h-20 mx-auto" />
+          <img src="/logo.png" alt="Thresho" className="w-40 h-48 mx-auto" />
         </div>
+
 
         <h2 className="text-2xl mb-2" style={{ fontFamily: 'var(--font-serif)' }}>
           Thresho

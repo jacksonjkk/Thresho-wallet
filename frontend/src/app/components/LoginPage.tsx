@@ -25,6 +25,7 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
   const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isBiometricLoading, setIsBiometricLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
 
   const [signupFirstName, setSignupFirstName] = useState("");
   const [signupLastName, setSignupLastName] = useState("");
@@ -82,11 +83,19 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
       setSignupSuccess(true);
       toast.success("Account created successfully!");
 
-      setSignupFirstName("");
-      setSignupLastName("");
-      setSignupEmail("");
-      setSignupPassword("");
-      setConfirmPassword("");
+      // Redirect to login tab after success
+      setTimeout(() => {
+        setEmail(signupEmail); // Pre-fill login email
+        setActiveTab("login");
+        setSignupSuccess(false);
+
+        // Clear signup fields
+        setSignupFirstName("");
+        setSignupLastName("");
+        setSignupEmail("");
+        setSignupPassword("");
+        setConfirmPassword("");
+      }, 2000);
     } catch (err) {
       setSignupError(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -180,7 +189,7 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
             </CardHeader>
 
             <CardContent className="px-6 sm:px-10 pb-10">
-              <Tabs defaultValue="login" className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-8 h-12 p-1 bg-black/40 border border-white/5 rounded-xl">
                   <TabsTrigger value="login" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white text-[10px] font-bold uppercase tracking-widest">Login</TabsTrigger>
                   <TabsTrigger value="signup" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white text-[10px] font-bold uppercase tracking-widest">Signup</TabsTrigger>
@@ -377,6 +386,12 @@ export function LoginPage({ onLogin, onSignupClick }: LoginPageProps) {
                     </div>
 
                     {signupError && <div className="p-3.5 rounded-lg border border-status-error/20 bg-status-error/5 text-[10px] font-bold text-status-error animate-shake">{signupError}</div>}
+
+                    {signupSuccess && (
+                      <div className="p-3.5 rounded-lg border border-status-success/20 bg-status-success/5 text-[10px] font-bold text-status-success text-center px-4">
+                        Success! Redirecting you to login...
+                      </div>
+                    )}
 
                     <Button type="submit" disabled={signupLoading} className="w-full h-14 bg-primary hover:bg-primary/90 text-[10px] font-bold uppercase tracking-widest rounded-xl shadow-xl">
                       {signupLoading ? "Creating..." : "Sign Up"}
