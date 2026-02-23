@@ -5,8 +5,7 @@ import { Label } from "@/app/components/ui/label";
 import { Wallet, Copy, Check, ArrowRight, ShieldCheck, Cpu, Anchor } from "lucide-react";
 import { useState } from "react";
 import SignClient from "@walletconnect/sign-client";
-import { Core } from "@walletconnect/core";
-import { Web3Modal } from "@walletconnect/modal-core";
+import { Web3Modal } from "@web3modal/standalone";
 import { useAuth } from "@/app/context/AuthContext";
 import { authService } from "@/services/auth.service";
 import { freighterService } from "@/services/freighter.service";
@@ -103,13 +102,14 @@ export function ConnectWalletPage({ onNext, onSkip }: ConnectWalletPageProps) {
 
       // Open WalletConnect modal or deeplink
       if (uri) {
-        // Try to open Freighter mobile via deeplink
-        const deeplink = `https://wallet.freighter.app/wc?uri=${encodeURIComponent(uri)}`;
         if (/(android|iphone|ipad|mobile)/i.test(navigator.userAgent)) {
+          // Try to open Freighter mobile via deeplink
+          const deeplink = `https://wallet.freighter.app/wc?uri=${encodeURIComponent(uri)}`;
           window.location.href = deeplink;
         } else {
-          // On web, show QR code modal
-          window.open(deeplink, "_blank");
+          // On web, show QR code modal using Web3Modal instance
+          const web3Modal = new Web3Modal({ projectId, walletConnectVersion: 2 });
+          web3Modal.openModal({ uri });
         }
         toast("Scan QR or open Freighter mobile");
       }
