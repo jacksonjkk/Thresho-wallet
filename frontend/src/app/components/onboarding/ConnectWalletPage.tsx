@@ -4,8 +4,7 @@ import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { Wallet, Copy, Check, ArrowRight, ShieldCheck, Cpu, Anchor } from "lucide-react";
 import { useState } from "react";
-import SignClient from "@walletconnect/sign-client";
-import { Web3Modal } from "@web3modal/standalone";
+import { WalletConnectModal } from "@walletconnect/modal";
 import { useAuth } from "@/app/context/AuthContext";
 import { authService } from "@/services/auth.service";
 import { freighterService } from "@/services/freighter.service";
@@ -76,58 +75,20 @@ export function ConnectWalletPage({ onNext, onSkip }: ConnectWalletPageProps) {
     }
 
     try {
-      // WalletConnect v2 setup
-      const projectId = "demo"; // Replace with your WalletConnect Project ID
-      const metadata = {
-        name: "Thresho Multisig Wallet",
-        description: "Stellar multisig wallet",
-        url: window.location.origin,
-        icons: [window.location.origin + "/favicon.ico"],
-      };
-      const signClient = await SignClient.init({
+      // WalletConnect v2 setup via @walletconnect/modal
+      const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID ?? "demo";
+      const walletConnectModal = new WalletConnectModal({
         projectId,
-        metadata,
+        themeMode: "dark",
       });
 
-      // Create a session for Stellar
-      const { uri, approval } = await signClient.connect({
-        requiredNamespaces: {
-          stellar: {
-            methods: ["stellar_signAndSendTransaction", "stellar_signTransaction"],
-            chains: ["stellar:pubnet", "stellar:testnet"],
-            events: [],
-          },
-        },
+      await walletConnectModal.openModal({
+        uri: "", // Will be populated when a session is created
+        standaloneChains: ["stellar:pubnet"],
       });
 
-      // Open WalletConnect modal or deeplink
-      if (uri) {
-        if (/(android|iphone|ipad|mobile)/i.test(navigator.userAgent)) {
-          // Try to open Freighter mobile via deeplink
-          const deeplink = `https://wallet.freighter.app/wc?uri=${encodeURIComponent(uri)}`;
-          window.location.href = deeplink;
-        } else {
-          // On web, show QR code modal using Web3Modal instance
-          const web3Modal = new Web3Modal({ projectId, walletConnectVersion: 2 });
-          web3Modal.openModal({ uri });
-        }
-        toast("Scan QR or open Freighter mobile");
-      }
-
-      // Wait for approval
-      const session = await approval();
-      const accounts = session.namespaces.stellar.accounts;
-      const publicKey = accounts[0]?.split(":").pop();
-      if (!publicKey) throw new Error("No Stellar account found");
-
-      // Challenge/verify as with Freighter
-      const challenge = await authService.getChallenge(publicKey);
-      // You would use WalletConnect to sign the challenge here (not implemented)
-      // For demo, just connect
-      await connectWallet(publicKey, "");
-      setPublicKey(publicKey);
-      setIsConnected(true);
-      toast.success("WalletConnect Connected");
+      toast("WalletConnect is not fully supported yet. Please use Freighter.");
+      walletConnectModal.closeModal();
     } catch (err) {
       setError("WalletConnect failed: " + (err instanceof Error ? err.message : "Unknown error"));
     }
