@@ -2,14 +2,22 @@ import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
-import { Wallet, Copy, Check, ArrowRight, ShieldCheck, Cpu, Anchor } from "lucide-react";
+import { Wallet, Copy, Check, ArrowRight, ShieldCheck, Cpu } from "lucide-react";
 import { useState } from "react";
+import SignClient from "@walletconnect/sign-client";
 import { WalletConnectModal } from "@walletconnect/modal";
 import { useAuth } from "@/app/context/AuthContext";
 import { authService } from "@/services/auth.service";
 import { freighterService } from "@/services/freighter.service";
 import { motion } from "motion/react";
 import { toast } from "sonner";
+
+// WalletConnect v2 Project ID — set VITE_WALLETCONNECT_PROJECT_ID in your .env.local
+const WC_PROJECT_ID = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID ?? "";
+
+// Stellar CAIP-2 chain IDs
+const STELLAR_CHAIN = "stellar:pubnet"; // use "stellar:testnet" for testnet
+
 
 interface ConnectWalletPageProps {
   onNext: () => void;
@@ -74,25 +82,99 @@ export function ConnectWalletPage({ onNext, onSkip }: ConnectWalletPageProps) {
       console.log("Freighter not available, falling back to WalletConnect", err);
     }
 
+    // ── WalletConnect v2 + Stellar SEP-10 flow ──────────────────────────────
+    let modal: WalletConnectModal | null = null;
+
     try {
-      // WalletConnect v2 setup via @walletconnect/modal
-      const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID ?? "demo";
-      const walletConnectModal = new WalletConnectModal({
-        projectId,
+      if (!WC_PROJECT_ID) {
+        setError("WalletConnect project ID is not configured. Set VITE_WALLETCONNECT_PROJECT_ID in .env.local");
+        return;
+      }
+
+      // 1. Create the QR modal instance
+      modal = new WalletConnectModal({
+        projectId: WC_PROJECT_ID,
         themeMode: "dark",
+        chains: [STELLAR_CHAIN],
       });
 
-      await walletConnectModal.openModal({
-        uri: "", // Will be populated when a session is created
-        standaloneChains: ["stellar:pubnet"],
+      // 2. Init SignClient
+      const signClient = await SignClient.init({
+        projectId: WC_PROJECT_ID,
+        metadata: {
+          name: "Thresho Multisig Wallet",
+          description: "Stellar multisignature wallet powered by Thresho",
+          url: window.location.origin,
+          icons: [`${window.location.origin}/favicon.ico`],
+        },
       });
 
-      toast("WalletConnect is not fully supported yet. Please use Freighter.");
-      walletConnectModal.closeModal();
+      // 3. Create a WalletConnect session for Stellar
+      const { uri, approval } = await signClient.connect({
+        requiredNamespaces: {
+          stellar: {
+            methods: ["stellar_signTransaction", "stellar_signAndSendTransaction"],
+            chains: [STELLAR_CHAIN],
+            events: [],
+          },
+        },
+      });
+
+      // 4. Show QR code modal so the user can scan with their mobile wallet
+      if (uri) {
+        await modal.openModal({ uri });
+        toast("Scan the QR code with your Stellar wallet app");
+      }
+
+      // 5. Wait for the user to approve the session on their wallet
+      const session = await approval();
+      modal.closeModal();
+
+      // 6. Extract public key from CAIP-10 account string
+      //    Format: "stellar:pubnet:GABCD..." → take last segment
+      const accounts = session.namespaces.stellar?.accounts ?? [];
+      if (accounts.length === 0) throw new Error("No Stellar account returned from WalletConnect session");
+      const wcPublicKey = accounts[0].split(":").pop();
+      if (!wcPublicKey || !wcPublicKey.match(/^G[A-Z2-7]{55}$/)) {
+        throw new Error("WalletConnect returned an invalid Stellar public key");
+      }
+
+      toast("Connected — requesting SEP-10 challenge signature…");
+
+      // 7. Get SEP-10 challenge XDR from the backend
+      const { challengeXdr, networkPassphrase } = await authService.getChallenge(wcPublicKey);
+
+      // 8. Ask the wallet to sign the challenge XDR via WalletConnect
+      const signResult = await signClient.request<{ signedXdr: string }>({
+        topic: session.topic,
+        chainId: STELLAR_CHAIN,
+        request: {
+          method: "stellar_signTransaction",
+          params: {
+            xdr: challengeXdr,
+            networkPassphrase,
+          },
+        },
+      });
+
+      const signedXdr =
+        typeof signResult === "string"
+          ? signResult
+          : signResult?.signedXdr ?? "";
+
+      if (!signedXdr) throw new Error("WalletConnect wallet did not return a signed XDR");
+
+      // 9. Verify challenge with backend and complete wallet connection
+      await connectWallet(wcPublicKey, signedXdr);
+      setPublicKey(wcPublicKey);
+      setIsConnected(true);
+      toast.success("WalletConnect wallet linked successfully!");
     } catch (err) {
+      modal?.closeModal();
       setError("WalletConnect failed: " + (err instanceof Error ? err.message : "Unknown error"));
     }
   };
+
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
